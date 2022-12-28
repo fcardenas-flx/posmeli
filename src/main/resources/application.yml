@@ -1,0 +1,76 @@
+project:
+  version: @project.version@
+spring:
+  profiles:
+    active: local
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+server:
+  servlet:
+    context-path: '/pos-meli'
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always
+springdoc:
+  swagger-ui:
+    disable-swagger-default-url: true
+config:
+  table: posMeliConfig
+library:
+  use:
+    database: ${CONFIG_DATABASE_ENABLED:true}
+
+---
+spring:
+  datasource:
+    generate-unique-name: false
+    name: testdb
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.HSQLDialect
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+  data:
+    mongodb:
+      port: 0
+  config:
+    activate:
+      on-profile: local, generate-doc
+  sql:
+    init:
+      platform: hsqldb
+      mode: embedded
+      continue-on-error: false
+server:
+  port: 8085
+
+---
+spring:
+  datasource:
+    url: jdbc:mysql://${PROJECT_SQL_SERVER}:${PROJECT_SQL_PORT}/${PROJECT_SQL_DATABASE}?zeroDateTimeBehavior=convertToNull&useSSL=false&serverTimezone=${PROJECT_TIME_ZONE:#{'GMT'}}
+    username: ${PROJECT_SQL_USER}
+    password: ${PROJECT_SQL_PASSWORD}
+    hikari:
+      maximum-pool-size: ${MAX_POOL_DB}
+  jpa:
+    database-platform: org.hibernate.dialect.MySQL5InnoDBDialect
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+  sql:
+    init:
+      platform: mysql
+      mode: never
+  config:
+    activate:
+      on-profile: qa, docker
+config:
+  timezone: ${PROJECT_TIME_ZONE:#{'GMT'}}

@@ -10,9 +10,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.ArrayList;
-
-
 @Getter
 @Setter
 @NoArgsConstructor
@@ -20,22 +17,12 @@ import java.util.ArrayList;
 @Builder
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class MeliItemPrice
+public class MeliItemSearchResponse
 {
-	@JsonProperty("id")
-	public String id;
+	@JsonProperty("code")
+	public String code;
 
-	@JsonProperty("prices")
-	public ArrayList<MeliPrice> prices;
+	@JsonProperty("body")
+	public MeliItemResult body;
 
-	@JsonProperty("presentation")
-	public MeliItemPricePresentation presentation;
-	@JsonProperty("payment_method_prices")
-	public ArrayList<String> paymentMethodPrices;
-
-	@JsonProperty("reference_prices")
-	public ArrayList<MeliPrice> referencePrices;
-
-	@JsonProperty("purchase_discounts")
-	public ArrayList<String> purchaseDiscounts;
 }

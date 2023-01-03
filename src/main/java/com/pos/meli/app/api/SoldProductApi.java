@@ -15,45 +15,21 @@ import lombok.Setter;
 
 import java.math.BigDecimal;
 
+
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
-@JsonRootName(value = "Product")
+@JsonRootName(value = "Sold Product")
 @JsonInclude(JsonInclude.Include.ALWAYS)
 @JsonIgnoreProperties(ignoreUnknown = true)
-@Schema(description = "Product.")
-public class ProductApi
+@Schema(description = "Sold Product.")
+public class SoldProductApi extends ProductApi
 {
 	@JsonProperty
-	private String id;
-
-	@JsonProperty
-	private String name;
-
-	@JsonProperty
-	private String sku;
-
-	@JsonProperty
-	private String meliId;
-
-	@JsonProperty
-	private int availableQuantity;
+	private int soldQuantity;
 
 	@JsonProperty
 	@JsonSerialize(using = BigDecimalMoneySerializer.class)
-	@Schema(description = "Purchase Price")
-	private BigDecimal purchasePrice;
-
-	@JsonProperty
-	@JsonSerialize(using = BigDecimalMoneySerializer.class)
-	@Schema(description = "Meli Price")
-	private BigDecimal meliPrice;
-
-	@JsonProperty
-	@JsonSerialize(using = BigDecimalMoneySerializer.class)
-	@Schema(description = "Total Amount")
-	private BigDecimal mshopsPrice;
-
+	private BigDecimal soldPrice;
 }

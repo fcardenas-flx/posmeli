@@ -19,7 +19,7 @@ import java.util.ArrayList;
 @Builder
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class MeliItemAttributes
+public class MeliItemAttribute
 {
 	@JsonProperty("id")
 	public String id;

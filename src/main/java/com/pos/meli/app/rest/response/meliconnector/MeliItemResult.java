@@ -115,7 +115,7 @@ public class MeliItemResult
 	public MeliItemAdress address;
 
 	@JsonProperty("attributes")
-	public ArrayList<MeliItemAttributes> attributes;
+	public ArrayList<MeliItemAttribute> attributes;
 
 	@JsonProperty("prices")
 	public MeliItemPrice prices;

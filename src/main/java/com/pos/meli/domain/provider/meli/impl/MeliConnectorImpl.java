@@ -2,6 +2,7 @@ package com.pos.meli.domain.provider.meli.impl;
 
 import com.pos.meli.app.api.ProductApi;
 import com.pos.meli.app.rest.response.meliconnector.MeliItemResult;
+import com.pos.meli.app.rest.response.meliconnector.MeliItemSearchResponse;
 import com.pos.meli.app.rest.response.meliconnector.MeliSearchResult;
 import com.pos.meli.app.rest.response.meliconnector.MeliToken;
 import com.pos.meli.domain.provider.meli.MeliConnector;
@@ -18,6 +19,7 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 
 import static org.springframework.http.RequestEntity.head;
@@ -74,8 +76,23 @@ public class MeliConnectorImpl implements MeliConnector
 	@Override
 	public MeliItemResult getItemById(String meliId)
 	{
+		StringBuilder builder = new StringBuilder();
+		String url = builder.append(this.url).append("/items?ids=").append(meliId).toString();
 
-		return null;
+		String meliToken = getAuthorizationToken();
+
+		HttpHeaders headers = new HttpHeaders();
+		headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+		headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
+		headers.setBearerAuth(meliToken);
+
+		HttpEntity request = new HttpEntity(headers);
+
+		MeliItemSearchResponse[] meliItemsSearchResponse;
+
+		meliItemsSearchResponse = restTemplate.exchange(url, HttpMethod.GET, request, MeliItemSearchResponse[].class, 1).getBody();
+
+		return Arrays.stream(meliItemsSearchResponse).findFirst().get().getBody();
 	}
 
 	@Override

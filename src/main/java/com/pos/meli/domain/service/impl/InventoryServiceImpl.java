@@ -1,9 +1,10 @@
 package com.pos.meli.domain.service.impl;
 
 import com.pos.meli.app.api.ProductApi;
+import com.pos.meli.app.rest.response.meliconnector.MeliItemAttribute;
 import com.pos.meli.app.rest.response.meliconnector.MeliItemResult;
+import com.pos.meli.app.rest.response.meliconnector.MeliPrice;
 import com.pos.meli.domain.provider.meli.MeliConnector;
-import com.pos.meli.domain.provider.meli.request.AuthorizationRequest;
 import com.pos.meli.domain.service.InventoryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @EnableConfigurationProperties
@@ -38,10 +40,23 @@ public class InventoryServiceImpl implements InventoryService
 
 			productApi.setName(meliItemResult.getTitle());
 			productApi.setMeliPrice(meliItemResult.getPrice());
-			productApi.setId(meliItemResult.getId());
+			productApi.setMeliId(meliItemResult.getId());
 			productApi.setAvailableQuantity(meliItemResult.getAvailableQuantity());
 
 
+			MeliItemResult meliItemSearched = meliConnector.getItemById(meliItemResult.getId());
+
+			MeliItemAttribute meliItemAttribute = meliItemSearched.getAttributes().stream().
+					filter(attribute -> attribute.getId().equals("SELLER_SKU"))
+					.collect(Collectors.toList()).get(0);
+
+			productApi.setSku(meliItemAttribute.getValueName());
+
+			MeliPrice mercashopsPrice = meliItemResult.getPrices().getPrices().stream().
+					filter(meliPrice -> meliPrice.getConditions().getContextRestrictions().get(0).equals("channel_mshops")).
+					collect(Collectors.toList()).get(0);
+
+			productApi.setMshopsPrice(mercashopsPrice.getAmount());
 
 			productApiList.add(productApi);
 

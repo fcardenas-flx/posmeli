@@ -47,7 +47,7 @@ public class SaleApi
 	private SellerApi seller;
 
 	@JsonProperty
-	private List<ProductApi> soldProducts;
+	private List<SoldProductApi> soldProducts;
 
 	@JsonProperty
 	@JsonSerialize(using = BigDecimalMoneySerializer.class)

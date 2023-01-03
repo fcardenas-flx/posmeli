@@ -67,22 +67,22 @@ public class SaleServiceImpl implements SaleService
 
 		List<SoldProduct> soldProducts = new ArrayList<>();
 
-		saleApi.getSoldProducts().stream().forEach(productApi -> {
+		saleApi.getSoldProducts().stream().forEach(soldProductApi -> {
 
 			SoldProduct soldProduct = new SoldProduct();
 
-			MeliItemResult meliItemResult = meliConnector.getItemById(productApi.getMeliId());
+			MeliItemResult meliItemResult = meliConnector.getItemById(soldProductApi.getMeliId());
 			int availableQuantity = meliItemResult.getAvailableQuantity();
-			int quantity = availableQuantity - productApi.getSoldQuantity();
-			productApi.setAvailableQuantity(quantity);
-			meliConnector.updateItem(productApi);
+			int quantity = availableQuantity - soldProductApi.getSoldQuantity();
+			soldProductApi.setAvailableQuantity(quantity);
+			meliConnector.updateItem(soldProductApi);
 
 
-			soldProduct.setMeliId(productApi.getMeliId());
-			soldProduct.setName(productApi.getName());
-			soldProduct.setSku(productApi.getSku());
-			soldProduct.setSoldPrice(productApi.getSoldPrice());
-			soldProduct.setSoldQuantity(productApi.getSoldQuantity());
+			soldProduct.setMeliId(soldProductApi.getMeliId());
+			soldProduct.setName(soldProductApi.getName());
+			soldProduct.setSku(soldProductApi.getSku());
+			soldProduct.setSoldPrice(soldProductApi.getSoldPrice());
+			soldProduct.setSoldQuantity(soldProductApi.getSoldQuantity());
 		});
 
 		sale.setSoldProducts(soldProducts);

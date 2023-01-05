@@ -96,7 +96,7 @@ public class MeliConnectorImpl implements MeliConnector
 	}
 
 	@Override
-	public void updateItem(ProductApi productApi)
+	public void updateItem(MeliItemResult meliItemResult)
 	{
 
 	}

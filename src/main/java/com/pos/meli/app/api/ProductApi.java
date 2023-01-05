@@ -1,5 +1,6 @@
 package com.pos.meli.app.api;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -27,9 +28,6 @@ import java.math.BigDecimal;
 public class ProductApi
 {
 	@JsonProperty
-	private String id;
-
-	@JsonProperty
 	private String name;
 
 	@JsonProperty
@@ -39,7 +37,7 @@ public class ProductApi
 	private String meliId;
 
 	@JsonProperty
-	private int availableQuantity;
+	private int quantity;
 
 	@JsonProperty
 	@JsonSerialize(using = BigDecimalMoneySerializer.class)

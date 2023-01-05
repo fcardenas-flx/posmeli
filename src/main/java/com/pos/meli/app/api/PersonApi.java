@@ -23,7 +23,7 @@ import lombok.Setter;
 public class PersonApi
 {
 	@JsonProperty
-	private String id;
+	private String identification;
 
 	@JsonProperty
 	private String name;

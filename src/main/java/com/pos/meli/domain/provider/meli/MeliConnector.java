@@ -11,5 +11,5 @@ public interface MeliConnector
 
 	MeliItemResult getItemById(String meliId);
 
-	void updateItem(ProductApi productApi);
+	void updateItem(MeliItemResult meliItemResult);
 }

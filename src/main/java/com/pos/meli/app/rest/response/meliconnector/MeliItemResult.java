@@ -84,6 +84,9 @@ public class MeliItemResult
 	@JsonProperty("sold_quantity")
 	public int soldQuantity;
 
+	@JsonProperty("initial_quantity")
+	public int initialQuantity;
+
 	@JsonProperty("available_quantity")
 	public int availableQuantity;
 

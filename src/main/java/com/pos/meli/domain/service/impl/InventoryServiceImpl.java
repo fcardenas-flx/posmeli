@@ -41,10 +41,12 @@ public class InventoryServiceImpl implements InventoryService
 			productApi.setName(meliItemResult.getTitle());
 			productApi.setMeliPrice(meliItemResult.getPrice());
 			productApi.setMeliId(meliItemResult.getId());
-			productApi.setAvailableQuantity(meliItemResult.getAvailableQuantity());
+
 
 
 			MeliItemResult meliItemSearched = meliConnector.getItemById(meliItemResult.getId());
+
+			productApi.setQuantity(meliItemSearched.getInitialQuantity());
 
 			MeliItemAttribute meliItemAttribute = meliItemSearched.getAttributes().stream().
 					filter(attribute -> attribute.getId().equals("SELLER_SKU"))

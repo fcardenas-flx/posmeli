@@ -7,10 +7,13 @@ import com.pos.meli.app.rest.response.meliconnector.MeliItemResult;
 import com.pos.meli.domain.model.Company;
 import com.pos.meli.domain.model.Sale;
 import com.pos.meli.domain.model.SoldProduct;
+import com.pos.meli.domain.model.catalog.Consecutive;
 import com.pos.meli.domain.provider.meli.MeliConnector;
+import com.pos.meli.domain.repository.CatalogRepository;
 import com.pos.meli.domain.repository.CompanyRepository;
 import com.pos.meli.domain.repository.SaleRepository;
 import com.pos.meli.domain.repository.SoldProductRepository;
+import com.pos.meli.domain.service.AbstractService;
 import com.pos.meli.domain.service.SaleService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -28,7 +31,7 @@ import java.util.List;
 @Service
 @EnableConfigurationProperties
 @ConfigurationProperties(prefix = "application")
-public class SaleServiceImpl implements SaleService
+public class SaleServiceImpl extends AbstractService implements SaleService
 {
 
 	@Autowired
@@ -43,6 +46,8 @@ public class SaleServiceImpl implements SaleService
 	@Autowired
 	CompanyRepository companyRepository;
 
+	@Autowired
+	CatalogRepository catalogRepository;
 
 	@Value("${seller.company.nit:1010243260}")
 	private String companyNit;
@@ -54,13 +59,19 @@ public class SaleServiceImpl implements SaleService
 	{
 
 		saleApi.setDate(LocalDateTime.now());
-		//TODO manejar consecutivo de venta con tabla de catalogs
-		saleApi.setCode("");
+
+		Consecutive consecutive = catalogRepository.findConsecutiveByCode(consecutiveSalesCode);
+		int newConsecutive = Integer.parseInt(consecutive.getValue()) + 1;
+		String saleCode = consecutiveSalesPrefix + newConsecutive;
+
+		consecutive.setValue(String.valueOf(newConsecutive));
+
+		catalogRepository.save(consecutive);
+
+		saleApi.setCode(saleCode);
 
 		Sale sale = new Sale();
-
-		//TODO manejar consecutivo de venta con tabla de catalogs
-		sale.setCode("");
+		sale.setCode(saleCode);
 		sale.setTotalAmount(saleApi.getTotalAmount());
 		sale.setSoldDate(LocalDateTime.now());
 
@@ -72,11 +83,10 @@ public class SaleServiceImpl implements SaleService
 			SoldProduct soldProduct = new SoldProduct();
 
 			MeliItemResult meliItemResult = meliConnector.getItemById(soldProductApi.getMeliId());
-			int availableQuantity = meliItemResult.getAvailableQuantity();
-			int quantity = availableQuantity - soldProductApi.getSoldQuantity();
-			soldProductApi.setAvailableQuantity(quantity);
-			meliConnector.updateItem(soldProductApi);
-
+			int productQuantity = meliItemResult.getInitialQuantity();
+			int quantity = productQuantity - soldProductApi.getSoldQuantity();
+			meliItemResult.setInitialQuantity(quantity);
+			meliConnector.updateItem(meliItemResult);
 
 			soldProduct.setMeliId(soldProductApi.getMeliId());
 			soldProduct.setName(soldProductApi.getName());

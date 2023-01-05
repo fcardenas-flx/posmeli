@@ -1,5 +1,6 @@
 package com.pos.meli.app.api;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -30,26 +31,30 @@ import java.util.List;
 @Schema(description = "Product.")
 public class SaleApi
 {
-
+	@JsonIgnore
 	@JsonProperty
-	private String id;
-
-	@JsonProperty
+	@Schema(description = "Sale Code")
 	private String code;
 
 	@JsonProperty
+	@JsonIgnore
+	@Schema(description = "Sale Date")
 	private LocalDateTime date;
 
 	@JsonProperty
+	@Schema(description = "Sale Client")
 	private ClientApi client;
 
 	@JsonProperty
+	@Schema(description = "Sale Seller")
 	private SellerApi seller;
 
 	@JsonProperty
+	@Schema(description = "Sold Products")
 	private List<SoldProductApi> soldProducts;
 
 	@JsonProperty
+	@Schema(description = "Sale Total Amount")
 	@JsonSerialize(using = BigDecimalMoneySerializer.class)
 	private BigDecimal totalAmount;
 }

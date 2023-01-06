@@ -1,8 +1,10 @@
 package com.pos.meli.domain.provider.meli.impl;
 
 import com.pos.meli.app.api.ProductApi;
+import com.pos.meli.app.rest.response.meliconnector.MeliItemPrice;
 import com.pos.meli.app.rest.response.meliconnector.MeliItemResult;
 import com.pos.meli.app.rest.response.meliconnector.MeliItemSearchResponse;
+import com.pos.meli.app.rest.response.meliconnector.MeliPrice;
 import com.pos.meli.app.rest.response.meliconnector.MeliSearchResult;
 import com.pos.meli.app.rest.response.meliconnector.MeliToken;
 import com.pos.meli.domain.provider.meli.MeliConnector;
@@ -18,6 +20,7 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -96,9 +99,38 @@ public class MeliConnectorImpl implements MeliConnector
 	}
 
 	@Override
+	public MeliItemResult getItemBySku(String sku)
+	{
+
+		return null;
+	}
+
+	@Override
 	public void updateItem(MeliItemResult meliItemResult)
 	{
 
+	}
+
+	@Override
+	public MeliItemPrice getMshopsPriceById(String meliId)
+	{
+		StringBuilder builder = new StringBuilder();
+		String url = builder.append(this.url).append("/items/").append(meliId).append("/prices/types/standard/channels/mshops").toString();
+
+		String meliToken = getAuthorizationToken();
+
+		HttpHeaders headers = new HttpHeaders();
+		headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+		headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
+		headers.setBearerAuth(meliToken);
+
+		HttpEntity request = new HttpEntity(headers);
+
+		MeliItemPrice meliPrice;
+
+		meliPrice = restTemplate.exchange(url, HttpMethod.GET, request, MeliItemPrice.class, 1).getBody();
+
+		return meliPrice;
 	}
 
 	private String getAuthorizationToken()

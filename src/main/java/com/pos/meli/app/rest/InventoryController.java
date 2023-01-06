@@ -49,7 +49,7 @@ public class InventoryController
 		return new ResponseEntity<>(inventoryService.getAllProducts(), HttpStatus.OK);
 	}
 
-	@Operation(summary = "get product by Sku", description = "get product by Sku")
+	@Operation(summary = "get product by Meli Id", description = "get product by Sku")
 	@ApiResponses(value = {
 			@ApiResponse(responseCode = "200", description = "Get all products", content = @Content(array = @ArraySchema(schema = @Schema(implementation = ProductApi.class)))),
 			@ApiResponse(responseCode = "400", description = "Bad request data.", content = @Content(schema = @Schema(implementation = ApiError.class))),
@@ -57,10 +57,10 @@ public class InventoryController
 			@ApiResponse(responseCode = "500", description = "Internal error.", content = @Content(schema = @Schema(implementation = ApiError.class))),
 	})
 	@GetMapping(path = "/get/product", produces = { MediaType.APPLICATION_JSON_VALUE })
-	public ResponseEntity<?> getProductBySku(@RequestParam String sku)
+	public ResponseEntity<?> getProductBySku(@RequestParam String meliId)
 			throws Exception
 	{
-		return new ResponseEntity<>(inventoryService.getAllProducts(), HttpStatus.OK);
+		return new ResponseEntity<>(inventoryService.getProductById(meliId), HttpStatus.OK);
 	}
 
 	@Operation(summary = "Save Products", description = "Save Products")

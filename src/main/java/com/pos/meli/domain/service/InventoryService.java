@@ -9,4 +9,6 @@ public interface InventoryService
 	List<ProductApi>  getAllProducts() throws Exception;
 
 	List<ProductApi> saveProducts(List<ProductApi> products);
+
+	ProductApi getProductById(String meliId);
 }

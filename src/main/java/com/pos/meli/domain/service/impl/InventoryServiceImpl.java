@@ -11,6 +11,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -79,5 +80,31 @@ public class InventoryServiceImpl implements InventoryService
 
 
 		return null;
+	}
+
+	@Override
+	public ProductApi getProductById(String meliId)
+	{
+		MeliItemResult meliItemSearched = meliConnector.getItemById(meliId);
+
+		ProductApi productApi = new ProductApi();
+
+		productApi.setName(meliItemSearched.getTitle());
+
+		productApi.setMeliId(meliId);
+
+		productApi.setQuantity(meliItemSearched.getInitialQuantity());
+
+		MeliItemAttribute meliItemAttribute = meliItemSearched.getAttributes().stream().
+				filter(attribute -> attribute.getId().equals("SELLER_SKU"))
+				.collect(Collectors.toList()).get(0);
+
+		productApi.setSku(meliItemAttribute.getValueName());
+
+		productApi.setMeliPrice(meliItemSearched.getPrice());
+
+		productApi.setMshopsPrice(meliConnector.getMshopsPriceById(meliId).getPrices().get(0).getAmount());
+
+		return productApi;
 	}
 }

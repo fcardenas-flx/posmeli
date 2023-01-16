@@ -24,8 +24,17 @@ import java.math.BigDecimal;
 @JsonInclude(JsonInclude.Include.ALWAYS)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Schema(description = "Sold Product.")
-public class SoldProductApi extends ProductApi
+public class SoldProductApi
 {
+	@JsonProperty
+	private String meliId;
+
+	@JsonProperty
+	private String name;
+
+	@JsonProperty
+	private String sku;
+
 	@JsonProperty
 	private int soldQuantity;
 

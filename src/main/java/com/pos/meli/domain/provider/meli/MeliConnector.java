@@ -16,7 +16,7 @@ public interface MeliConnector
 
 	MeliItemResult getItemBySku(String sku);
 
-	void updateItem(MeliItemResult meliItemResult);
+	MeliItemResult updateItemQuantity(String meliId, int quantity);
 
 	MeliItemPrice getMshopsPriceById(String meliId);
 }

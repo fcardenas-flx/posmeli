@@ -22,14 +22,9 @@ import lombok.Setter;
 @Schema(description = "Invoice.")
 public class InvoiceApi
 {
-
-	@JsonProperty
-	private String id;
-
 	@JsonProperty
 	private SaleApi sale;
 
 	@JsonProperty
-	private CompanyApi companyApi;
-
+	private CompanyApi company;
 }

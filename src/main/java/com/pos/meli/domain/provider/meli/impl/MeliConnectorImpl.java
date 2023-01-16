@@ -106,9 +106,18 @@ public class MeliConnectorImpl implements MeliConnector
 	}
 
 	@Override
-	public void updateItem(MeliItemResult meliItemResult)
+	public MeliItemResult updateItemQuantity(String meliID, int newQuantity)
 	{
+		HttpHeaders headers = new HttpHeaders();
+		headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+		headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
 
+		String meliToken = getAuthorizationToken();
+		headers.setBearerAuth(meliToken);
+
+		HttpEntity formEntity = new HttpEntity<String>("{\"available_quantity\":"+ newQuantity +"}", headers);
+
+		return restTemplate.exchange(url + "/items/" + meliID, HttpMethod.PUT, formEntity, MeliItemResult.class).getBody();
 	}
 
 	@Override

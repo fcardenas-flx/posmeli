@@ -22,6 +22,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.stereotype.Service;
 import org.modelmapper.ModelMapper;
 
+import javax.annotation.PostConstruct;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -54,10 +55,15 @@ public class SaleServiceImpl extends AbstractService implements SaleService
 
 	protected ModelMapper mapper;
 
+	@PostConstruct
+	protected void init()
+	{
+		mapper = new ModelMapper();
+	}
+
 	@Override
 	public SaleApi performSell(SaleApi saleApi)
 	{
-
 		saleApi.setDate(LocalDateTime.now());
 
 		Consecutive consecutive = catalogRepository.findConsecutiveByCode(consecutiveSalesCode);
@@ -75,7 +81,6 @@ public class SaleServiceImpl extends AbstractService implements SaleService
 		sale.setTotalAmount(saleApi.getTotalAmount());
 		sale.setSoldDate(LocalDateTime.now());
 
-
 		List<SoldProduct> soldProducts = new ArrayList<>();
 
 		saleApi.getSoldProducts().stream().forEach(soldProductApi -> {
@@ -83,21 +88,31 @@ public class SaleServiceImpl extends AbstractService implements SaleService
 			SoldProduct soldProduct = new SoldProduct();
 
 			MeliItemResult meliItemResult = meliConnector.getItemById(soldProductApi.getMeliId());
-			int productQuantity = meliItemResult.getInitialQuantity();
+			int productQuantity = meliItemResult.getAvailableQuantity();
 			int quantity = productQuantity - soldProductApi.getSoldQuantity();
-			meliItemResult.setInitialQuantity(quantity);
-			meliConnector.updateItem(meliItemResult);
+
+			//TODO: Update
+			meliConnector.updateItemQuantity(soldProductApi.getMeliId(), quantity);
 
 			soldProduct.setMeliId(soldProductApi.getMeliId());
 			soldProduct.setName(soldProductApi.getName());
 			soldProduct.setSku(soldProductApi.getSku());
 			soldProduct.setSoldPrice(soldProductApi.getSoldPrice());
 			soldProduct.setSoldQuantity(soldProductApi.getSoldQuantity());
+
+			soldProducts.add(soldProduct);
 		});
 
 		sale.setSoldProducts(soldProducts);
 
-		saleRepository.save(sale);
+		Sale salemaked = (Sale) saleRepository.saveAndFlush(sale);
+
+
+		soldProducts.stream().forEach(soldProduct -> {
+
+			soldProduct.setSale(salemaked);
+
+		});
 
 		soldProductRepository.saveAll(soldProducts);
 
@@ -114,7 +129,7 @@ public class SaleServiceImpl extends AbstractService implements SaleService
 		Company company = new Company();
 		company = companyRepository.findByNit(companyNit);
 
-		invoice.setCompanyApi(mapper.map(company, CompanyApi.class));
+		invoice.setCompany(mapper.map(company, CompanyApi.class));
 
 		return invoice;
 	}

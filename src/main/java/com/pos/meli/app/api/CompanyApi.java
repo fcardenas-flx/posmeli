@@ -23,7 +23,7 @@ import lombok.Setter;
 public class CompanyApi
 {
 	@JsonProperty
-	private String id;
+	private Long id;
 
 	@JsonProperty
 	private String name;

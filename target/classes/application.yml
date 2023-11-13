@@ -1,5 +1,5 @@
 project:
-  version: 0.0.1-SNAPSHOT
+  version: project.version
 spring:
   profiles:
     active: local

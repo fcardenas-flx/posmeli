@@ -30,7 +30,7 @@ public class InventoryServiceImpl implements InventoryService
 	{
 
 		String site_id = "MCO";
-		String nickname = "CBR1542892";
+		String nickname = "MOTOSHOP2REPUESTOS";
 
 		List<ProductApi> productApiList = new ArrayList<>();
 		ProductApi productApi = new ProductApi();

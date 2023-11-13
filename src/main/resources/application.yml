@@ -1,5 +1,5 @@
 project:
-  version: @project.version@
+  version: project.version
 spring:
   profiles:
     active: local

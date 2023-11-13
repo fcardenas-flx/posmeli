@@ -36,13 +36,13 @@ public class MeliConnectorImpl implements MeliConnector
 	@Autowired
 	RestTemplate restTemplate;
 
-	@Value("${provider.meli.clientId:8486720812524581}")
+	@Value("${provider.meli.clientId:1690093796892956}")
 	private String clientId;
 
-	@Value("${provider.meli.clientSecret:RIwjrHiiegXxSDl5LXDxlPP1oulIHZ9r}")
+	@Value("${provider.meli.clientSecret:dF1n00gMvkpAFhDKnnv4T4UOjop8h85m}")
 	private String clientSecret;
 
-	@Value("${provider.meli.refreshToken:TG-63ac78ca0b5f830001295764-537077242}")
+	@Value("${provider.meli.refreshToken:TG-655167b8ed7e48000199268a-537077242}")
 	private String refreshToken;
 
 	@Value("${provider.meli.api.grantType:refresh_token}")

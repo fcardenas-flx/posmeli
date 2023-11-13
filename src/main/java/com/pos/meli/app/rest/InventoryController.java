@@ -49,6 +49,20 @@ public class InventoryController
 		return new ResponseEntity<>(inventoryService.getAllProducts(), HttpStatus.OK);
 	}
 
+	@Operation(summary = "get all Meli products", description = "get all Meli products")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "Get all Meli products", content = @Content(array = @ArraySchema(schema = @Schema(implementation = ProductApi.class)))),
+			@ApiResponse(responseCode = "400", description = "Bad request data.", content = @Content(schema = @Schema(implementation = ApiError.class))),
+			@ApiResponse(responseCode = "404", description = "Not found.", content = @Content(schema = @Schema(implementation = ApiError.class))),
+			@ApiResponse(responseCode = "500", description = "Internal error.", content = @Content(schema = @Schema(implementation = ApiError.class))),
+	})
+	@GetMapping(path = "/get/allMeliProducts", produces = { MediaType.APPLICATION_JSON_VALUE })
+	public ResponseEntity<?> getAllMeliProducts()
+			throws Exception
+	{
+		return new ResponseEntity<>(inventoryService.getAllMeliProducts(), HttpStatus.OK);
+	}
+
 	@Operation(summary = "get product by Meli Id", description = "get product by Sku")
 	@ApiResponses(value = {
 			@ApiResponse(responseCode = "200", description = "Get all products", content = @Content(array = @ArraySchema(schema = @Schema(implementation = ProductApi.class)))),
@@ -61,6 +75,20 @@ public class InventoryController
 			throws Exception
 	{
 		return new ResponseEntity<>(inventoryService.getProductById(meliId), HttpStatus.OK);
+	}
+
+	@Operation(summary = "sync products", description = "sync products")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "Sync all products", content = @Content(array = @ArraySchema(schema = @Schema(implementation = ProductApi.class)))),
+			@ApiResponse(responseCode = "400", description = "Bad request data.", content = @Content(schema = @Schema(implementation = ApiError.class))),
+			@ApiResponse(responseCode = "404", description = "Not found.", content = @Content(schema = @Schema(implementation = ApiError.class))),
+			@ApiResponse(responseCode = "500", description = "Internal error.", content = @Content(schema = @Schema(implementation = ApiError.class))),
+	})
+	@GetMapping(path = "/sync/products", produces = { MediaType.APPLICATION_JSON_VALUE })
+	public ResponseEntity<?> syncProducts()
+			throws Exception
+	{
+		return new ResponseEntity<>(inventoryService.syncProducts(), HttpStatus.OK);
 	}
 
 	@Operation(summary = "Save Products", description = "Save Products")

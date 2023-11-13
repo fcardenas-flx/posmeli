@@ -11,4 +11,8 @@ public interface InventoryService
 	List<ProductApi> saveProducts(List<ProductApi> products);
 
 	ProductApi getProductById(String meliId);
+
+	List<ProductApi> getAllMeliProducts();
+
+	List<ProductApi> syncProducts();
 }

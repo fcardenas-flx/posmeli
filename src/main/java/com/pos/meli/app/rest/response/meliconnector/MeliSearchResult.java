@@ -50,4 +50,6 @@ public class MeliSearchResult
 	@JsonProperty("available_filters")
 	public ArrayList<MeliFilter> availableFilters;
 
+	@JsonProperty("scroll_id")
+	public String scrollId;
 }

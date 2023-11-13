@@ -6,6 +6,7 @@ import com.pos.meli.app.rest.response.meliconnector.MeliItemResult;
 import com.pos.meli.app.rest.response.meliconnector.MeliItemSearchResponse;
 import com.pos.meli.app.rest.response.meliconnector.MeliPrice;
 import com.pos.meli.app.rest.response.meliconnector.MeliSearchResult;
+import com.pos.meli.app.rest.response.meliconnector.MeliSearchScrollResult;
 import com.pos.meli.app.rest.response.meliconnector.MeliToken;
 import com.pos.meli.domain.provider.meli.MeliConnector;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 
+import static org.springframework.http.HttpEntity.EMPTY;
 import static org.springframework.http.RequestEntity.head;
 import static org.springframework.http.RequestEntity.post;
 
@@ -80,7 +82,7 @@ public class MeliConnectorImpl implements MeliConnector
 	public MeliItemResult getItemById(String meliId)
 	{
 		StringBuilder builder = new StringBuilder();
-		String url = builder.append(this.url).append("/items?ids=").append(meliId).toString();
+		String url = builder.append(this.url).append("/items?ids=").append(meliId).append("&attributes=id,title,price,available_quantity,attributes").toString();
 
 		String meliToken = getAuthorizationToken();
 
@@ -140,6 +142,54 @@ public class MeliConnectorImpl implements MeliConnector
 		meliPrice = restTemplate.exchange(url, HttpMethod.GET, request, MeliItemPrice.class, 1).getBody();
 
 		return meliPrice;
+	}
+
+	@Override
+	public ArrayList<String> getAllMeliProductsIds(String siteId, String nickname, String userId)
+	{
+
+		ArrayList<String> resultProducts = new ArrayList<>();
+
+		StringBuilder builder = new StringBuilder();
+		String url = builder.append(this.url).append("/users/").append(userId).append("/items/search?search_type=scan&limit=100&attributes=scroll_id,results").toString();
+
+		String meliToken = getAuthorizationToken();
+
+		HttpHeaders headers = new HttpHeaders();
+		headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+		headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
+		headers.setBearerAuth(meliToken);
+
+		HttpEntity request = new HttpEntity(headers);
+
+		MeliSearchScrollResult meliSearchScrollResult = restTemplate.exchange(url, HttpMethod.GET, request, MeliSearchScrollResult.class, 1).getBody();
+
+		String scrollId = meliSearchScrollResult.getScrollId();
+
+		resultProducts.addAll(meliSearchScrollResult.getResults());
+
+		//TODO: Luego iterar cada 100 productos e ir almacenando en lista resultado
+		//https://api.mercadolibre.com/users/{{user_id}}/items/search?search_type=scan&limit=100&scroll_id={{scroll_id}}
+
+		do
+		{
+			HttpEntity scrollRequest = new HttpEntity(headers);
+
+			meliSearchScrollResult = restTemplate.exchange(url + "&scroll_id=" + scrollId, HttpMethod.GET, scrollRequest, MeliSearchScrollResult.class, 1).getBody();
+
+			scrollId = meliSearchScrollResult.getScrollId();
+
+			if (scrollId != "")
+			{
+				resultProducts.addAll(meliSearchScrollResult.getResults());
+				System.out.println(resultProducts.size());
+			}
+		}
+		while (!scrollId.isEmpty());
+
+
+		return resultProducts;
+
 	}
 
 	private String getAuthorizationToken()

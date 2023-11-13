@@ -9,4 +9,7 @@ public abstract class AbstractService
 
 	@Value("${consecutive.sales.prefix:V-}")
 	protected String consecutiveSalesPrefix;
+
+	@Value("${empty.data:}")
+	protected String emptyData;
 }

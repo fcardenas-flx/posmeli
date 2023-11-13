@@ -17,17 +17,11 @@ import lombok.Setter;
 @Builder
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class MeliItemAttributeValue
+public class MeliItemAttributeStruct
 {
-	@JsonProperty("id")
-	public String id;
+	@JsonProperty("number")
+	public int number;
 
-	@JsonProperty("name")
-	public String name;
-
-	@JsonProperty("struct")
-	public MeliItemAttributeStruct struct;
-
-	@JsonProperty("source")
-	public String source;
+	@JsonProperty("unit")
+	public String unit;
 }

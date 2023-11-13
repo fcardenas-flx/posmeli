@@ -10,6 +10,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.ArrayList;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -17,17 +19,11 @@ import lombok.Setter;
 @Builder
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class MeliItemAttributeValue
+public class MeliSearchScrollResult
 {
-	@JsonProperty("id")
-	public String id;
+	@JsonProperty("scroll_id")
+	public String scrollId;
 
-	@JsonProperty("name")
-	public String name;
-
-	@JsonProperty("struct")
-	public MeliItemAttributeStruct struct;
-
-	@JsonProperty("source")
-	public String source;
+	@JsonProperty("results")
+	public ArrayList<String> results;
 }

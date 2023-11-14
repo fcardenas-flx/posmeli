@@ -34,9 +34,6 @@ public class ProductApi
 	private String sku;
 
 	@JsonProperty
-	private String meliId;
-
-	@JsonProperty
 	private int quantity;
 
 	@JsonProperty
@@ -46,12 +43,6 @@ public class ProductApi
 
 	@JsonProperty
 	@JsonSerialize(using = BigDecimalMoneySerializer.class)
-	@Schema(description = "Meli Price")
-	private BigDecimal meliPrice;
-
-	@JsonProperty
-	@JsonSerialize(using = BigDecimalMoneySerializer.class)
-	@Schema(description = "Total Amount")
-	private BigDecimal mshopsPrice;
-
+	@Schema(description = "Sale Price")
+	private BigDecimal salePrice;
 }

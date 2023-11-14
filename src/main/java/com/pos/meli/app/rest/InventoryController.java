@@ -1,5 +1,6 @@
 package com.pos.meli.app.rest;
 
+import com.pos.meli.app.api.MeliProductApi;
 import com.pos.meli.app.api.ProductApi;
 import com.pos.meli.domain.service.InventoryService;
 import com.pos.meli.domain.util.ApiError;
@@ -37,7 +38,7 @@ public class InventoryController
 
 	@Operation(summary = "get all products", description = "get all products")
 	@ApiResponses(value = {
-			@ApiResponse(responseCode = "200", description = "Get all products", content = @Content(array = @ArraySchema(schema = @Schema(implementation = ProductApi.class)))),
+			@ApiResponse(responseCode = "200", description = "Get all products", content = @Content(array = @ArraySchema(schema = @Schema(implementation = MeliProductApi.class)))),
 			@ApiResponse(responseCode = "400", description = "Bad request data.", content = @Content(schema = @Schema(implementation = ApiError.class))),
 			@ApiResponse(responseCode = "404", description = "Not found.", content = @Content(schema = @Schema(implementation = ApiError.class))),
 			@ApiResponse(responseCode = "500", description = "Internal error.", content = @Content(schema = @Schema(implementation = ApiError.class))),
@@ -51,7 +52,7 @@ public class InventoryController
 
 	@Operation(summary = "get all Meli products", description = "get all Meli products")
 	@ApiResponses(value = {
-			@ApiResponse(responseCode = "200", description = "Get all Meli products", content = @Content(array = @ArraySchema(schema = @Schema(implementation = ProductApi.class)))),
+			@ApiResponse(responseCode = "200", description = "Get all Meli products", content = @Content(array = @ArraySchema(schema = @Schema(implementation = MeliProductApi.class)))),
 			@ApiResponse(responseCode = "400", description = "Bad request data.", content = @Content(schema = @Schema(implementation = ApiError.class))),
 			@ApiResponse(responseCode = "404", description = "Not found.", content = @Content(schema = @Schema(implementation = ApiError.class))),
 			@ApiResponse(responseCode = "500", description = "Internal error.", content = @Content(schema = @Schema(implementation = ApiError.class))),

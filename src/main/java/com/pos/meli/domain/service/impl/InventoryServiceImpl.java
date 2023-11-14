@@ -1,20 +1,33 @@
 package com.pos.meli.domain.service.impl;
 
+import com.pos.meli.app.api.InventoryApi;
+import com.pos.meli.app.api.MeliProductApi;
 import com.pos.meli.app.api.ProductApi;
 import com.pos.meli.app.rest.response.meliconnector.MeliItemAttribute;
 import com.pos.meli.app.rest.response.meliconnector.MeliItemResult;
 import com.pos.meli.app.rest.response.meliconnector.MeliPrice;
 import com.pos.meli.domain.provider.meli.MeliConnector;
 import com.pos.meli.domain.service.AbstractService;
+import com.pos.meli.domain.service.FileService;
 import com.pos.meli.domain.service.InventoryService;
+import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.stereotype.Service;
 
+import java.io.File;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -26,47 +39,50 @@ public class InventoryServiceImpl extends AbstractService implements InventorySe
 	@Autowired
 	MeliConnector meliConnector;
 
+	@Autowired
+	FileService fileService;
+
 	@Override
-	public List<ProductApi> getAllProducts() throws Exception
+	public List<MeliProductApi> getAllProducts() throws Exception
 	{
 
 		String site_id = "MCO";
 		String nickname = "MOTOSHOP2REPUESTOS";
 
-		List<ProductApi> productApiList = new ArrayList<>();
-		ProductApi productApi = new ProductApi();
+		List<MeliProductApi> meliProductApiList = new ArrayList<>();
+		MeliProductApi meliProductApi = new MeliProductApi();
 
 		ArrayList<MeliItemResult> meliItemResults = meliConnector.getAllProducts(site_id, nickname);
 
 		meliItemResults.stream().forEach(meliItemResult -> {
 
-			productApi.setName(meliItemResult.getTitle());
-			productApi.setMeliPrice(meliItemResult.getPrice());
-			productApi.setMeliId(meliItemResult.getId());
+			meliProductApi.setName(meliItemResult.getTitle());
+			meliProductApi.setMeliPrice(meliItemResult.getPrice());
+			meliProductApi.setMeliId(meliItemResult.getId());
 
 
 
 			MeliItemResult meliItemSearched = meliConnector.getItemById(meliItemResult.getId());
 
-			productApi.setQuantity(meliItemSearched.getInitialQuantity());
+			meliProductApi.setQuantity(meliItemSearched.getInitialQuantity());
 
 			MeliItemAttribute meliItemAttribute = meliItemSearched.getAttributes().stream().
 					filter(attribute -> attribute.getId().equals("SELLER_SKU"))
 					.collect(Collectors.toList()).get(0);
 
-			productApi.setSku(meliItemAttribute.getValueName());
+			meliProductApi.setSku(meliItemAttribute.getValueName());
 
 			MeliPrice mercashopsPrice = meliItemResult.getPrices().getPrices().stream().
 					filter(meliPrice -> meliPrice.getConditions().getContextRestrictions().get(0).equals("channel_mshops")).
 					collect(Collectors.toList()).get(0);
 
-			productApi.setMshopsPrice(mercashopsPrice.getAmount());
+			meliProductApi.setMshopsPrice(mercashopsPrice.getAmount());
 
-			productApiList.add(productApi);
+			meliProductApiList.add(meliProductApi);
 
 		});
 
-		return productApiList;
+		return meliProductApiList;
 	}
 
 	@Override
@@ -84,80 +100,164 @@ public class InventoryServiceImpl extends AbstractService implements InventorySe
 	}
 
 	@Override
-	public ProductApi getProductById(String meliId)
+	public MeliProductApi getProductById(String meliId)
 	{
 		MeliItemResult meliItemSearched = meliConnector.getItemById(meliId);
 
-		ProductApi productApi = new ProductApi();
+		MeliProductApi meliProductApi = new MeliProductApi();
 
-		productApi.setName(meliItemSearched.getTitle());
+		meliProductApi.setName(meliItemSearched.getTitle());
 
-		productApi.setMeliId(meliId);
+		meliProductApi.setMeliId(meliId);
 
-		productApi.setQuantity(meliItemSearched.getInitialQuantity());
+		meliProductApi.setQuantity(meliItemSearched.getInitialQuantity());
 
 		MeliItemAttribute meliItemAttribute = meliItemSearched.getAttributes().stream().
 				filter(attribute -> attribute.getId().equals("SELLER_SKU"))
 				.collect(Collectors.toList()).get(0);
 
-		productApi.setSku(meliItemAttribute.getValueName());
+		meliProductApi.setSku(meliItemAttribute.getValueName());
 
-		productApi.setMeliPrice(meliItemSearched.getPrice());
+		meliProductApi.setMeliPrice(meliItemSearched.getPrice());
 
-		productApi.setMshopsPrice(meliConnector.getMshopsPriceById(meliId).getPrices().get(0).getAmount());
+		meliProductApi.setMshopsPrice(meliConnector.getMshopsPriceById(meliId).getPrices().get(0).getAmount());
 
-		return productApi;
+		return meliProductApi;
 	}
 
 	@Override
-	public List<ProductApi> getAllMeliProducts()
+	public List<MeliProductApi> getAllMeliProducts()
 	{
 		String siteId = "MCO";
 		String nickname = "MOTOSHOP2REPUESTOS";
 		String userId = "537077242";
 
-		List<ProductApi> productApiList = new ArrayList<>();
+		List<MeliProductApi> meliProductApiList = new ArrayList<>();
 
-		//TODO: Consultar todos los Product Id del vendedor
 		ArrayList<String> meliItemIds = meliConnector.getAllMeliProductsIds(siteId, nickname, userId);
 
-		//TODO: Iterar cada producto para completar toda su información en una lista
 		meliItemIds.parallelStream().forEach(meliItemId ->
 		{
-			System.out.println(meliItemId);
-
-			ProductApi productApi = new ProductApi();
+			MeliProductApi meliProductApi = new MeliProductApi();
 
 			MeliItemResult meliItemResult = meliConnector.getItemById(meliItemId);
 
-			productApi.setName(meliItemResult.getTitle());
-			productApi.setMeliPrice(meliItemResult.getPrice());
-			productApi.setMeliId(meliItemResult.getId());
+			meliProductApi.setName(meliItemResult.getTitle());
+			meliProductApi.setMeliPrice(meliItemResult.getPrice());
+			meliProductApi.setMeliId(meliItemResult.getId());
 
-			productApi.setQuantity(meliItemResult.getAvailableQuantity());
+			meliProductApi.setQuantity(meliItemResult.getAvailableQuantity());
 
 			List<MeliItemAttribute> attributesSku = meliItemResult.getAttributes().stream().
 					filter(attribute -> attribute.getId().equals("SELLER_SKU"))
 					.collect(Collectors.toList());
 
 			if (attributesSku.isEmpty())
-				productApi.setSku(emptyData);
+				meliProductApi.setSku(emptyData);
 			else
-				productApi.setSku(attributesSku.get(0).getValueName());
+				meliProductApi.setSku(attributesSku.get(0).getValueName());
 
 			//productApi.setMshopsPrice(meliConnector.getMshopsPriceById(meliItemId).getPrices().get(0).getAmount());
 
-			productApiList.add(productApi);
+			meliProductApiList.add(meliProductApi);
 		});
 
-		//TODO: Retornan lista con toda la info de productos del vendedor
-
-		return productApiList;
+		return meliProductApiList;
 	}
 
 	@Override
-	public List<ProductApi> syncProducts()
+	public List<ProductApi> syncProducts() throws IOException, InvalidFormatException
 	{
+		System.out.println("Obteniendo Información de Inventario...");
+
+		InventoryApi inventoryDataFile = getInventoryDataFile();
+
+		System.out.println("Obteniendo Información de productos Publicados en Meli...");
+
+		List<MeliProductApi> meliProductApiList = getAllMeliProducts();
+
+		System.out.println("Obteniendo Información de productos con cantidades diferentes...");
+
+		List<ProductApi> productApiListWithQuantityDifferences = inventoryDataFile.getProductApiList().stream()
+				.filter(productApi -> meliProductApiList.stream()
+						.anyMatch(meliProductApi -> meliProductApi.getSku().equals(productApi.getSku())
+								&& meliProductApi.getQuantity() != productApi.getQuantity())).collect(Collectors.toList());
+
+		System.out.println("Sincronizando stock de productos... "+productApiListWithQuantityDifferences.size());
+
+		productApiListWithQuantityDifferences.stream().forEach(productApi ->
+		{
+			System.out.println("Sincronizando Producto: " + productApi.getSku() + " " + productApi.getName());
+
+			Optional<MeliProductApi> meliProduct = meliProductApiList.stream()
+					.filter(meliProductApi -> meliProductApi.getSku().equals(productApi.getSku())).findFirst();
+
+			if (meliProduct.isPresent())
+			{
+				try
+				{
+					meliConnector.updateItemQuantity(meliProduct.get().getMeliId(), productApi.getQuantity());
+				}
+				catch (Exception exception)
+				{
+					System.out.println("Producto no se pudo actualizar");
+				}
+			}
+		});
+
+		System.out.println("Finalizado... Productos Sincronizados Satisfactoriamente");
+
+//		meliProductApiList.stream().filter(meliProductApi -> meliProductApi.getSku().equals("0000001277")).collect(Collectors.toList());
+
 		return null;
 	}
+
+	private InventoryApi getInventoryDataFile() throws IOException, InvalidFormatException
+	{
+		InventoryApi inventoryApi = new InventoryApi();
+
+		List<ProductApi> productApiList = new ArrayList<>();
+
+		Workbook wb = WorkbookFactory.create(new File("/home/usuario/Escritorio/" + "inventory.xls"));
+
+		Sheet ws = wb.getSheetAt(0);
+
+		Iterator<Row> rowIterator = ws.iterator();
+
+		while (rowIterator.hasNext())
+		{
+			Row row = rowIterator.next();
+			Iterator<Cell> cellIterator = row.cellIterator();
+
+			if (row.getRowNum() == 0) {
+				continue;
+			}
+
+			ProductApi productApi = new ProductApi();
+
+			productApi.setName(row.getCell(2).getStringCellValue());
+			productApi.setQuantity((int) row.getCell(7).getNumericCellValue());
+			productApi.setPurchasePrice(BigDecimal.valueOf(row.getCell(5).getNumericCellValue()));
+			productApi.setSalePrice(BigDecimal.valueOf(row.getCell(6).getNumericCellValue()));
+
+			switch (row.getCell(3).getCellType())
+			{
+				case Cell.CELL_TYPE_STRING:
+					productApi.setSku(row.getCell(3).getStringCellValue());
+					break;
+
+				case Cell.CELL_TYPE_NUMERIC:
+					productApi.setSku(String.valueOf(row.getCell(3).getNumericCellValue()));
+					break;
+			}
+
+			productApiList.add(productApi);
+		}
+
+		inventoryApi.setProductApiList(productApiList);
+
+		return inventoryApi;
+	}
+
+
 }

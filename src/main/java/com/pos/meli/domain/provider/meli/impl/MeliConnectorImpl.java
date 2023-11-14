@@ -151,7 +151,8 @@ public class MeliConnectorImpl implements MeliConnector
 		ArrayList<String> resultProducts = new ArrayList<>();
 
 		StringBuilder builder = new StringBuilder();
-		String url = builder.append(this.url).append("/users/").append(userId).append("/items/search?search_type=scan&limit=100&attributes=scroll_id,results").toString();
+		String url = builder.append(this.url).append("/users/").append(userId)
+				.append("/items/search?search_type=scan&limit=100&attributes=scroll_id,results").toString();
 
 		String meliToken = getAuthorizationToken();
 
@@ -168,9 +169,6 @@ public class MeliConnectorImpl implements MeliConnector
 
 		resultProducts.addAll(meliSearchScrollResult.getResults());
 
-		//TODO: Luego iterar cada 100 productos e ir almacenando en lista resultado
-		//https://api.mercadolibre.com/users/{{user_id}}/items/search?search_type=scan&limit=100&scroll_id={{scroll_id}}
-
 		do
 		{
 			HttpEntity scrollRequest = new HttpEntity(headers);
@@ -182,14 +180,17 @@ public class MeliConnectorImpl implements MeliConnector
 			if (scrollId != "")
 			{
 				resultProducts.addAll(meliSearchScrollResult.getResults());
-				System.out.println(resultProducts.size());
 			}
 		}
 		while (!scrollId.isEmpty());
 
-
 		return resultProducts;
+	}
 
+	@Override
+	public MeliItemResult updateItemQuantityVariation(String meliId, int quantity)
+	{
+		return null;
 	}
 
 	private String getAuthorizationToken()

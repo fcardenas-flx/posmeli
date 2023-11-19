@@ -1,10 +1,8 @@
 package com.pos.meli.domain.provider.meli.impl;
 
-import com.pos.meli.app.api.ProductApi;
 import com.pos.meli.app.rest.response.meliconnector.MeliItemPrice;
 import com.pos.meli.app.rest.response.meliconnector.MeliItemResult;
 import com.pos.meli.app.rest.response.meliconnector.MeliItemSearchResponse;
-import com.pos.meli.app.rest.response.meliconnector.MeliPrice;
 import com.pos.meli.app.rest.response.meliconnector.MeliSearchResult;
 import com.pos.meli.app.rest.response.meliconnector.MeliSearchScrollResult;
 import com.pos.meli.app.rest.response.meliconnector.MeliToken;
@@ -21,12 +19,10 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 
-import static org.springframework.http.HttpEntity.EMPTY;
 import static org.springframework.http.RequestEntity.head;
 import static org.springframework.http.RequestEntity.post;
 
@@ -44,7 +40,7 @@ public class MeliConnectorImpl implements MeliConnector
 	@Value("${provider.meli.clientSecret:dF1n00gMvkpAFhDKnnv4T4UOjop8h85m}")
 	private String clientSecret;
 
-	@Value("${provider.meli.refreshToken:TG-655167b8ed7e48000199268a-537077242}")
+	@Value("${provider.meli.refreshToken:TG-65563ce4c71e2e00017cd56d-537077242}")
 	private String refreshToken;
 
 	@Value("${provider.meli.api.grantType:refresh_token}")
@@ -85,6 +81,26 @@ public class MeliConnectorImpl implements MeliConnector
 		String url = builder.append(this.url).append("/items?ids=").append(meliId).append("&attributes=id,title,price,available_quantity,attributes").toString();
 
 		String meliToken = getAuthorizationToken();
+
+		HttpHeaders headers = new HttpHeaders();
+		headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+		headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
+		headers.setBearerAuth(meliToken);
+
+		HttpEntity request = new HttpEntity(headers);
+
+		MeliItemSearchResponse[] meliItemsSearchResponse;
+
+		meliItemsSearchResponse = restTemplate.exchange(url, HttpMethod.GET, request, MeliItemSearchResponse[].class, 1).getBody();
+
+		return Arrays.stream(meliItemsSearchResponse).findFirst().get().getBody();
+	}
+
+	@Override
+	public MeliItemResult getItemById(String meliId, String meliToken)
+	{
+		StringBuilder builder = new StringBuilder();
+		String url = builder.append(this.url).append("/items?ids=").append(meliId).append("&attributes=id,title,price,available_quantity,attributes").toString();
 
 		HttpHeaders headers = new HttpHeaders();
 		headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
@@ -193,7 +209,8 @@ public class MeliConnectorImpl implements MeliConnector
 		return null;
 	}
 
-	private String getAuthorizationToken()
+	@Override
+	public String getAuthorizationToken()
 	{
 		HttpHeaders headers = new HttpHeaders();
 		headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);

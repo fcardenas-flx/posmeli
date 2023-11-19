@@ -136,11 +136,15 @@ public class InventoryServiceImpl extends AbstractService implements InventorySe
 
 		ArrayList<String> meliItemIds = meliConnector.getAllMeliProductsIds(siteId, nickname, userId);
 
+		String meliToken = meliConnector.getAuthorizationToken();
+
 		meliItemIds.parallelStream().forEach(meliItemId ->
 		{
+			System.out.println(meliItemId);
+
 			MeliProductApi meliProductApi = new MeliProductApi();
 
-			MeliItemResult meliItemResult = meliConnector.getItemById(meliItemId);
+			MeliItemResult meliItemResult = meliConnector.getItemById(meliItemId, meliToken);
 
 			meliProductApi.setName(meliItemResult.getTitle());
 			meliProductApi.setMeliPrice(meliItemResult.getPrice());

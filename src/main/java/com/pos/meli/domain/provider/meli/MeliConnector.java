@@ -14,6 +14,8 @@ public interface MeliConnector
 
 	MeliItemResult getItemById(String meliId);
 
+	MeliItemResult getItemById(String meliId, String meliToken);
+
 	MeliItemResult getItemBySku(String sku);
 
 	MeliItemResult updateItemQuantity(String meliId, int quantity);
@@ -23,4 +25,6 @@ public interface MeliConnector
 	ArrayList<String> getAllMeliProductsIds(String siteId, String nickname, String userId);
 
 	MeliItemResult updateItemQuantityVariation(String meliId, int quantity);
+
+	String getAuthorizationToken();
 }

@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.math.BigDecimal;
-
+import java.util.ArrayList;
 
 @Getter
 @Setter
@@ -38,5 +38,9 @@ public class MeliProductApi extends ProductApi
 	@JsonSerialize(using = BigDecimalMoneySerializer.class)
 	@Schema(description = "Total Amount")
 	private BigDecimal mshopsPrice;
+
+	@JsonProperty
+	@Schema(description = "Meli Product Variations")
+	private ArrayList<String> variations;
 
 }

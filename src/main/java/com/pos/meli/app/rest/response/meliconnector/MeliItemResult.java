@@ -120,6 +120,9 @@ public class MeliItemResult
 	@JsonProperty("attributes")
 	public ArrayList<MeliItemAttribute> attributes;
 
+	@JsonProperty("variations")
+	public ArrayList<MeliItemVariation> variations;
+
 	@JsonProperty("prices")
 	public MeliItemPrice prices;
 

@@ -150,6 +150,18 @@ public class InventoryServiceImpl extends AbstractService implements InventorySe
 			meliProductApi.setMeliPrice(meliItemResult.getPrice());
 			meliProductApi.setMeliId(meliItemResult.getId());
 
+			if (!meliItemResult.getVariations().isEmpty())
+			{
+				ArrayList<String> variations = new ArrayList<>();
+
+				meliItemResult.getVariations().stream().forEach(meliItemVariation ->
+				{
+					variations.add(meliItemVariation.getId());
+				});
+
+				meliProductApi.setVariations(variations);
+			}
+
 			meliProductApi.setQuantity(meliItemResult.getAvailableQuantity());
 
 			List<MeliItemAttribute> attributesSku = meliItemResult.getAttributes().stream().
@@ -160,8 +172,6 @@ public class InventoryServiceImpl extends AbstractService implements InventorySe
 				meliProductApi.setSku(emptyData);
 			else
 				meliProductApi.setSku(attributesSku.get(0).getValueName());
-
-			//productApi.setMshopsPrice(meliConnector.getMshopsPriceById(meliItemId).getPrices().get(0).getAmount());
 
 			meliProductApiList.add(meliProductApi);
 		});
@@ -187,6 +197,9 @@ public class InventoryServiceImpl extends AbstractService implements InventorySe
 						.anyMatch(meliProductApi -> meliProductApi.getSku().equals(productApi.getSku())
 								&& meliProductApi.getQuantity() != productApi.getQuantity())).collect(Collectors.toList());
 
+		List<ProductApi> productApiListNonPublished = new ArrayList<>();
+
+
 		System.out.println("Sincronizando stock de productos... "+productApiListWithQuantityDifferences.size());
 
 		productApiListWithQuantityDifferences.stream().forEach(productApi ->
@@ -200,19 +213,75 @@ public class InventoryServiceImpl extends AbstractService implements InventorySe
 			{
 				try
 				{
-					meliConnector.updateItemQuantity(meliProduct.get().getMeliId(), productApi.getQuantity());
+					if (meliProduct.get().getVariations() == null)
+					{
+						meliConnector.updateItemQuantity(meliProduct.get().getMeliId(), productApi.getQuantity());
+						System.out.println("Producto actualizado :" + meliProduct.get().getSku());
+					}
+					else
+					{
+						meliProduct.get().getVariations().stream().forEach(variationId ->
+						{
+							meliConnector.updateItemQuantityVariation(variationId, productApi.getQuantity());
+							System.out.println("Variación actualizada :" + variationId);
+						});
+					}
 				}
 				catch (Exception exception)
 				{
 					System.out.println("Producto no se pudo actualizar");
 				}
 			}
+			else
+			{
+				productApiListNonPublished.add(productApi);
+			}
 		});
+
+//		inventoryDataFile.getProductApiList().stream().forEach(productApi ->
+//		{
+//			System.out.println("Sincronizando Producto: " + productApi.getSku() + " " + productApi.getName());
+//
+//			Optional<MeliProductApi> meliProduct = meliProductApiList.stream()
+//					.filter(meliProductApi -> meliProductApi.getSku().equals(productApi.getSku())).findFirst();
+//
+//			if (meliProduct.isPresent())
+//			{
+//				try
+//				{
+//					if (meliProduct.get().getVariations() == null)
+//					{
+//						meliConnector.updateItemQuantity(meliProduct.get().getMeliId(), productApi.getQuantity());
+//						System.out.println("Producto actualizado:" + meliProduct.get().getSku());
+//					}
+//					else
+//					{
+//						meliProduct.get().getVariations().stream().forEach(variationId ->
+//						{
+//							meliConnector.updateItemQuantityVariation(variationId, productApi.getQuantity());
+//							System.out.println("Producto con Variación actualizada :" + variationId);
+//						});
+//					}
+//				}
+//				catch (Exception exception)
+//				{
+//					System.out.println("Producto no se pudo actualizar");
+//				}
+//			}
+//			else
+//			{
+//				productApiListNonPublished.add(productApi);
+//				System.out.println("Producto no publicado en Meli");
+//			}
+//		});
+
 
 		System.out.println("Finalizado... Productos Sincronizados Satisfactoriamente");
 
-//		meliProductApiList.stream().filter(meliProductApi -> meliProductApi.getSku().equals("0000001277")).collect(Collectors.toList());
-
+//		List<ProductApi> productApiListNonPublished = inventoryDataFile.getProductApiList().stream()
+//				.filter(productApi -> meliProductApiList.stream()
+//						.noneMatch((meliProductApi -> meliProductApi.getSku().equals(productApi.getSku())))).collect(
+//						Collectors.toList());
 		return null;
 	}
 

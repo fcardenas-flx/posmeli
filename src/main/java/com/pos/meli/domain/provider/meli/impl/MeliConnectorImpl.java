@@ -100,7 +100,7 @@ public class MeliConnectorImpl implements MeliConnector
 	public MeliItemResult getItemById(String meliId, String meliToken)
 	{
 		StringBuilder builder = new StringBuilder();
-		String url = builder.append(this.url).append("/items?ids=").append(meliId).append("&attributes=id,title,price,available_quantity,attributes").toString();
+		String url = builder.append(this.url).append("/items?ids=").append(meliId).append("&attributes=id,title,price,available_quantity,attributes,variations").toString();
 
 		HttpHeaders headers = new HttpHeaders();
 		headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
@@ -204,9 +204,18 @@ public class MeliConnectorImpl implements MeliConnector
 	}
 
 	@Override
-	public MeliItemResult updateItemQuantityVariation(String meliId, int quantity)
+	public MeliItemResult updateItemQuantityVariation(String variationId, int quantity)
 	{
-		return null;
+		HttpHeaders headers = new HttpHeaders();
+		headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+		headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
+
+		String meliToken = getAuthorizationToken();
+		headers.setBearerAuth(meliToken);
+
+		HttpEntity formEntity = new HttpEntity<String>("{\"variations\":[{\"id\":"+variationId+",\"available_quantity\":"+quantity+"}]}", headers);
+
+		return restTemplate.exchange(url + "/items/" + variationId, HttpMethod.PUT, formEntity, MeliItemResult.class).getBody();
 	}
 
 	@Override

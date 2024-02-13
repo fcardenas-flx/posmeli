@@ -3,6 +3,7 @@ package com.pos.meli.domain.provider.meli;
 import com.pos.meli.app.api.ProductApi;
 import com.pos.meli.app.rest.response.meliconnector.MeliItemPrice;
 import com.pos.meli.app.rest.response.meliconnector.MeliItemResult;
+import com.pos.meli.app.rest.response.meliconnector.MeliItemVariationResult;
 import com.pos.meli.app.rest.response.meliconnector.MeliPrice;
 
 import java.math.BigDecimal;
@@ -24,7 +25,9 @@ public interface MeliConnector
 
 	ArrayList<String> getAllMeliProductsIds(String siteId, String nickname, String userId);
 
-	MeliItemResult updateItemQuantityVariation(String meliId, int quantity);
+	MeliItemResult updateItemQuantityVariation(String meliId,  String variationId, int quantity);
 
 	String getAuthorizationToken();
+
+	MeliItemVariationResult getVariationItemByMeliIdAndVariationId(String meliId, String variationId, String meliToken);
 }

@@ -8,39 +8,28 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.pos.meli.domain.util.BigDecimalMoneySerializer;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
 
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@JsonRootName(value = "meliProduct")
+@JsonRootName(value = "meliProductVariation")
 @JsonInclude(JsonInclude.Include.ALWAYS)
 @JsonIgnoreProperties(ignoreUnknown = true)
-@Schema(description = "meliProduct.")
-public class MeliProductApi extends ProductApi
+@Schema(description = "meliProductVariation.")
+public class MeliProductVariationApi
 {
-	@JsonProperty
-	private String meliId;
+	@JsonProperty("id")
+	public String id;
 
 	@JsonProperty
-	@JsonSerialize(using = BigDecimalMoneySerializer.class)
-	@Schema(description = "Meli Price")
-	private BigDecimal meliPrice;
+	private String sku;
 
 	@JsonProperty
-	@JsonSerialize(using = BigDecimalMoneySerializer.class)
-	@Schema(description = "Total Amount")
-	private BigDecimal mshopsPrice;
-
-	@JsonProperty
-	@Schema(description = "Meli Product Variations")
-	private ArrayList<MeliProductVariationApi> variations;
-
+	private int quantity;
 }

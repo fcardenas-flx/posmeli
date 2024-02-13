@@ -2,9 +2,12 @@ package com.pos.meli.domain.service.impl;
 
 import com.pos.meli.app.api.InventoryApi;
 import com.pos.meli.app.api.MeliProductApi;
+import com.pos.meli.app.api.MeliProductVariationApi;
 import com.pos.meli.app.api.ProductApi;
 import com.pos.meli.app.rest.response.meliconnector.MeliItemAttribute;
 import com.pos.meli.app.rest.response.meliconnector.MeliItemResult;
+import com.pos.meli.app.rest.response.meliconnector.MeliItemVariation;
+import com.pos.meli.app.rest.response.meliconnector.MeliItemVariationResult;
 import com.pos.meli.app.rest.response.meliconnector.MeliPrice;
 import com.pos.meli.domain.provider.meli.MeliConnector;
 import com.pos.meli.domain.service.AbstractService;
@@ -149,29 +152,47 @@ public class InventoryServiceImpl extends AbstractService implements InventorySe
 			meliProductApi.setName(meliItemResult.getTitle());
 			meliProductApi.setMeliPrice(meliItemResult.getPrice());
 			meliProductApi.setMeliId(meliItemResult.getId());
+			meliProductApi.setSku(emptyData);
+			meliProductApi.setQuantity(meliItemResult.getAvailableQuantity());
 
 			if (!meliItemResult.getVariations().isEmpty())
 			{
-				ArrayList<String> variations = new ArrayList<>();
+				ArrayList<MeliProductVariationApi> variations = new ArrayList<>();
 
 				meliItemResult.getVariations().stream().forEach(meliItemVariation ->
 				{
-					variations.add(meliItemVariation.getId());
+					MeliProductVariationApi meliProductVariationApi = new MeliProductVariationApi();
+					meliProductVariationApi.setId(meliItemVariation.getId());
+					meliProductVariationApi.setQuantity(meliItemVariation.getAvailableQuantity());
+
+					MeliItemVariationResult meliItemVariationResult =
+							meliConnector.getVariationItemByMeliIdAndVariationId(meliItemId, meliItemVariation.getId(), meliToken);
+
+					List<MeliItemAttribute> attributesSku = meliItemVariationResult.getAttributes().stream().
+							filter(attribute -> attribute.getId().equals("SELLER_SKU"))
+							.collect(Collectors.toList());
+
+					if (attributesSku.isEmpty())
+						meliProductVariationApi.setSku(emptyData);
+					else
+						meliProductVariationApi.setSku(attributesSku.get(0).getValueName());
+
+					variations.add(meliProductVariationApi);
 				});
 
 				meliProductApi.setVariations(variations);
 			}
-
-			meliProductApi.setQuantity(meliItemResult.getAvailableQuantity());
-
-			List<MeliItemAttribute> attributesSku = meliItemResult.getAttributes().stream().
-					filter(attribute -> attribute.getId().equals("SELLER_SKU"))
-					.collect(Collectors.toList());
-
-			if (attributesSku.isEmpty())
-				meliProductApi.setSku(emptyData);
 			else
-				meliProductApi.setSku(attributesSku.get(0).getValueName());
+			{
+				List<MeliItemAttribute> attributesSku = meliItemResult.getAttributes().stream().
+						filter(attribute -> attribute.getId().equals("SELLER_SKU"))
+						.collect(Collectors.toList());
+
+				if (attributesSku.isEmpty())
+					meliProductApi.setSku(emptyData);
+				else
+					meliProductApi.setSku(attributesSku.get(0).getValueName());
+			}
 
 			meliProductApiList.add(meliProductApi);
 		});
@@ -197,7 +218,16 @@ public class InventoryServiceImpl extends AbstractService implements InventorySe
 						.anyMatch(meliProductApi -> meliProductApi.getSku().equals(productApi.getSku())
 								&& meliProductApi.getQuantity() != productApi.getQuantity())).collect(Collectors.toList());
 
+		//TODO: Optimizar este filtro para obtener directamente las variaciones con cantidades diferentes
+		List<MeliProductApi> productApiListWithVariations = meliProductApiList.stream()
+				.filter(meliProductApi -> meliProductApi.getVariations() != null).collect(Collectors.toList());
+
+
 		List<ProductApi> productApiListNonPublished = new ArrayList<>();
+
+//		productApiListNonPublished = inventoryDataFile.getProductApiList().stream()
+//				.filter(productApi -> meliProductApiList.stream()
+//						.noneMatch(meliProductApi -> meliProductApi.getSku().equals(productApi.getSku()))).collect(Collectors.toList());
 
 
 		System.out.println("Sincronizando stock de productos... "+productApiListWithQuantityDifferences.size());
@@ -220,10 +250,10 @@ public class InventoryServiceImpl extends AbstractService implements InventorySe
 					}
 					else
 					{
-						meliProduct.get().getVariations().stream().forEach(variationId ->
+						meliProduct.get().getVariations().stream().forEach(variation ->
 						{
-							meliConnector.updateItemQuantityVariation(variationId, productApi.getQuantity());
-							System.out.println("Variación actualizada :" + variationId);
+							meliConnector.updateItemQuantityVariation(meliProduct.get().getMeliId(), variation.getId(), productApi.getQuantity());
+							System.out.println("Variación actualizada :" + variation.getId());
 						});
 					}
 				}
@@ -234,9 +264,46 @@ public class InventoryServiceImpl extends AbstractService implements InventorySe
 			}
 			else
 			{
-				productApiListNonPublished.add(productApi);
+				//productApiListNonPublished.add(productApi);
 			}
 		});
+
+		System.out.println("Finalizado... Productos Sincronizados Satisfactoriamente");
+
+
+		System.out.println("Actualizando stock de productos con Variación");
+
+		productApiListWithVariations.stream().forEach(meliProductApi ->
+		{
+			meliProductApi.getVariations().stream().forEach(variation ->
+			{
+
+
+				System.out.println("Sincronizando Producto con variacion: " + variation.getId() + " Sku: " + variation.getSku() + " " + meliProductApi.getName());
+
+				try
+				{
+					ProductApi product = inventoryDataFile.getProductApiList().stream()
+							.filter(productApi -> productApi.getSku().equals(variation.getSku())).findFirst().get();
+
+					if(variation.getQuantity() != product.getQuantity())
+					{
+						meliConnector.updateItemQuantityVariation(meliProductApi.getMeliId(), variation.getId(),
+								product.getQuantity());
+
+						System.out.println(product.getName());
+					}
+				}
+				catch (Exception exception)
+				{
+					System.out.println("No se pudo actualizar producto con variación ");
+				}
+
+				System.out.println("Variación actualizada :" + variation.getId());
+			});
+		});
+
+
 
 //		inventoryDataFile.getProductApiList().stream().forEach(productApi ->
 //		{

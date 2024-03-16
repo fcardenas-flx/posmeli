@@ -1,0 +1,35 @@
+package com.pos.meli.app.api;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonRootName;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.pos.meli.domain.util.BigDecimalMoneySerializer;
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+import java.math.BigDecimal;
+
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@JsonRootName(value = "meliProductVariation")
+@JsonInclude(JsonInclude.Include.ALWAYS)
+@JsonIgnoreProperties(ignoreUnknown = true)
+@Schema(description = "meliProductVariation.")
+public class MeliProductVariationApi
+{
+	@JsonProperty("id")
+	public String id;
+
+	@JsonProperty
+	private String sku;
+
+	@JsonProperty
+	private int quantity;
+}

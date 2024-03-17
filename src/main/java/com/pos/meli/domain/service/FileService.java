@@ -1,9 +1,9 @@
 package com.pos.meli.domain.service;
 
-import java.io.InputStream;
+import org.apache.poi.ss.usermodel.Workbook;
 
 public interface FileService
 {
 
-	InputStream getFileFromSftp(String fileName);
+	Workbook getXlsFileFromSftp(String fileName);
 }

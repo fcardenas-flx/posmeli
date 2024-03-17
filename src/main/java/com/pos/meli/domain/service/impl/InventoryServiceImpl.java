@@ -24,8 +24,12 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.stereotype.Service;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -367,11 +371,11 @@ public class InventoryServiceImpl extends AbstractService implements InventorySe
 
 		List<ProductApi> productApiList = new ArrayList<>();
 
-		Workbook wb = WorkbookFactory.create(new File("/home/usuario/Escritorio/" + "inventory.xls"));
+		Workbook workbook = fileService.getXlsFileFromSftp("inventory.xls");
 
-		Sheet ws = wb.getSheetAt(0);
+		Sheet sheet = workbook.getSheetAt(0);
 
-		Iterator<Row> rowIterator = ws.iterator();
+		Iterator<Row> rowIterator = sheet.iterator();
 
 		while (rowIterator.hasNext())
 		{

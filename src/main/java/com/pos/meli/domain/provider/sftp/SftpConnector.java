@@ -1,9 +1,9 @@
 package com.pos.meli.domain.provider.sftp;
 
-import java.io.InputStream;
+import org.apache.poi.ss.usermodel.Workbook;
 
 public interface SftpConnector
 {
 
-	InputStream getFile(String fileName);
+	Workbook getXlsFile(String fileName);
 }

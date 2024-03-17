@@ -6,6 +6,9 @@ import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
 import com.jcraft.jsch.SftpException;
 import com.pos.meli.domain.provider.sftp.SftpConnector;
+import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.stereotype.Service;
 
@@ -20,41 +23,45 @@ import java.util.stream.Stream;
 @EnableConfigurationProperties
 public class SftpConnectorImpl implements SftpConnector
 {
-	private static String remoteHost = "172.18.0.5";
+	private static String remoteHost = "sparkling-water-50295.sftptogo.com";
 	private static int port = 22;
-	private static String username = "foo";
-	private static String password = "pass";
+	private static String username = "1b3f5b353d5d124e332a2c71464a59";
+	private static String password = "cvAEOXQpwJwo8g8JWv2EXIPi8MyBFRQR1shEuuUB";
 
 	private static Session session;
 
 	@Override
-	public InputStream getFile(String fileName)
+	public Workbook getXlsFile(String fileName)
 	{
 		JSch jsch = new JSch();
 
-		InputStream stream = null;
+		Workbook workbook = null;
 
 		try
 		{
-
 			ChannelSftp channel = connect();
-			Stream<String> contents = getContents(channel, fileName);
-			contents.forEach(a-> System.out.println(a));
-			//disconnect(channel);
-
-			//disconnect(channel);
+			InputStream file = channel.get(fileName);
+			workbook = WorkbookFactory.create(file);
+			disconnect(channel);
 		}
-
 		catch (JSchException e)
 		{
 			e.printStackTrace();
-		} catch (SftpException e)
+		}
+		catch (SftpException e)
 		{
 			e.printStackTrace();
 		}
+		catch (IOException e)
+		{
+			throw new RuntimeException(e);
+		}
+		catch (InvalidFormatException e)
+		{
+			throw new RuntimeException(e);
+		}
 
-
-		return stream;
+		return workbook;
 	}
 
 	private static Session getSession() throws JSchException

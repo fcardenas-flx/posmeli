@@ -7,8 +7,9 @@ import com.pos.meli.app.rest.response.meliconnector.MeliItemVariationResult;
 import com.pos.meli.app.rest.response.meliconnector.MeliSearchResult;
 import com.pos.meli.app.rest.response.meliconnector.MeliSearchScrollResult;
 import com.pos.meli.app.rest.response.meliconnector.MeliToken;
+import com.pos.meli.domain.model.MeliApiCredential;
 import com.pos.meli.domain.provider.meli.MeliConnector;
-import org.apache.poi.ss.usermodel.charts.ScatterChartData;
+import com.pos.meli.domain.repository.MeliAccountRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -35,6 +36,9 @@ public class MeliConnectorImpl implements MeliConnector
 
 	@Autowired
 	RestTemplate restTemplate;
+
+	@Autowired
+	MeliAccountRepository meliAccountRepository;
 
 	@Value("${provider.meli.clientId:5153304841324457}")
 	private String clientId;
@@ -169,7 +173,6 @@ public class MeliConnectorImpl implements MeliConnector
 	@Override
 	public ArrayList<String> getAllMeliProductsIds(String siteId, String nickname, String userId)
 	{
-
 		ArrayList<String> resultProducts = new ArrayList<>();
 
 		StringBuilder builder = new StringBuilder();
@@ -225,13 +228,28 @@ public class MeliConnectorImpl implements MeliConnector
 	}
 
 	@Override
+	public String getAuthorizationToken(MeliApiCredential meliApiCredential)
+	{
+		HttpHeaders headers = new HttpHeaders();
+		headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+		headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
+
+		HttpEntity formEntity = new HttpEntity<MultiValueMap<String, String>>(buildAuthorizationRequest
+				(meliApiCredential.getGrantType(), meliApiCredential.getClientId(), meliApiCredential.getClientSecret(),
+						meliApiCredential.getRefreshToken()), headers);
+
+		return restTemplate.exchange(url + "/oauth/token", HttpMethod.POST, formEntity, MeliToken.class)
+				.getBody().accessToken;
+	}
+
+	@Override
 	public String getAuthorizationToken()
 	{
 		HttpHeaders headers = new HttpHeaders();
 		headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 		headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
 
-		HttpEntity formEntity = new HttpEntity<MultiValueMap<String, String>>(buildAuthorizationRequest(), headers);
+		HttpEntity formEntity = new HttpEntity<MultiValueMap<String, String>>(buildAuthorizationRequest(this.url, this.clientId, this.clientSecret, this.refreshToken), headers);
 
 		return restTemplate.exchange(url + "/oauth/token", HttpMethod.POST, formEntity, MeliToken.class)
 				.getBody().accessToken;
@@ -259,13 +277,13 @@ public class MeliConnectorImpl implements MeliConnector
 		return meliItemVariationResult;
 	}
 
-	private MultiValueMap<String, String> buildAuthorizationRequest()
+	private MultiValueMap<String, String> buildAuthorizationRequest(String grantType, String clientId, String clientSecret, String refreshToken)
 	{
 		MultiValueMap<String, String> requestBody = new LinkedMultiValueMap<String, String>();
-		requestBody.add("grant_type", this.grantType);
-		requestBody.add("client_id", this.clientId);
-		requestBody.add("client_secret", this.clientSecret);
-		requestBody.add("refresh_token", this.refreshToken);
+		requestBody.add("grant_type", grantType);
+		requestBody.add("client_id", clientId);
+		requestBody.add("client_secret", clientSecret);
+		requestBody.add("refresh_token", refreshToken);
 
 		return requestBody;
 	}

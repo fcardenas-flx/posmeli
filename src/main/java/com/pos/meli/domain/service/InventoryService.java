@@ -15,7 +15,7 @@ public interface InventoryService
 
 	MeliProductApi getProductById(String meliId);
 
-	List<MeliProductApi> getAllMeliProducts();
+	List<MeliProductApi> getAllMeliProducts(String nickname);
 
-	List<ProductApi> syncProducts() throws IOException, InvalidFormatException;
+	List<ProductApi> syncProducts(String nickname) throws IOException, InvalidFormatException;
 }

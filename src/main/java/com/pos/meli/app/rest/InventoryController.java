@@ -58,10 +58,10 @@ public class InventoryController
 			@ApiResponse(responseCode = "500", description = "Internal error.", content = @Content(schema = @Schema(implementation = ApiError.class))),
 	})
 	@GetMapping(path = "/get/allMeliProducts", produces = { MediaType.APPLICATION_JSON_VALUE })
-	public ResponseEntity<?> getAllMeliProducts()
+	public ResponseEntity<?> getAllMeliProducts(@RequestParam String nickname)
 			throws Exception
 	{
-		return new ResponseEntity<>(inventoryService.getAllMeliProducts(), HttpStatus.OK);
+		return new ResponseEntity<>(inventoryService.getAllMeliProducts(nickname), HttpStatus.OK);
 	}
 
 	@Operation(summary = "get product by Meli Id", description = "get product by Sku")
@@ -86,10 +86,10 @@ public class InventoryController
 			@ApiResponse(responseCode = "500", description = "Internal error.", content = @Content(schema = @Schema(implementation = ApiError.class))),
 	})
 	@GetMapping(path = "/sync/products", produces = { MediaType.APPLICATION_JSON_VALUE })
-	public ResponseEntity<?> syncProducts()
+	public ResponseEntity<?> syncProducts(@RequestParam String nickname)
 			throws Exception
 	{
-		return new ResponseEntity<>(inventoryService.syncProducts(), HttpStatus.OK);
+		return new ResponseEntity<>(inventoryService.syncProducts(nickname), HttpStatus.OK);
 	}
 
 	@Operation(summary = "Save Products", description = "Save Products")

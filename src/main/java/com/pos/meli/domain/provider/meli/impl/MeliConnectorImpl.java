@@ -171,15 +171,13 @@ public class MeliConnectorImpl implements MeliConnector
 	}
 
 	@Override
-	public ArrayList<String> getAllMeliProductsIds(String siteId, String nickname, String userId)
+	public ArrayList<String> getAllMeliProductsIds(String siteId, String nickname, String userId, String meliToken)
 	{
 		ArrayList<String> resultProducts = new ArrayList<>();
 
 		StringBuilder builder = new StringBuilder();
 		String url = builder.append(this.url).append("/users/").append(userId)
 				.append("/items/search?search_type=scan&limit=100&attributes=scroll_id,results").toString();
-
-		String meliToken = getAuthorizationToken();
 
 		HttpHeaders headers = new HttpHeaders();
 		headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);

@@ -24,7 +24,7 @@ public interface MeliConnector
 
 	MeliItemPrice getMshopsPriceById(String meliId);
 
-	ArrayList<String> getAllMeliProductsIds(String siteId, String nickname, String userId);
+	ArrayList<String> getAllMeliProductsIds(String siteId, String nickname, String userId, String meliToken);
 
 	MeliItemResult updateItemQuantityVariation(String meliId,  String variationId, int quantity);
 

@@ -249,7 +249,7 @@ public class MeliConnectorImpl implements MeliConnector
 		headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 		headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
 
-		HttpEntity formEntity = new HttpEntity<MultiValueMap<String, String>>(buildAuthorizationRequest(this.url, this.clientId, this.clientSecret, this.refreshToken), headers);
+		HttpEntity formEntity = new HttpEntity<MultiValueMap<String, String>>(buildAuthorizationRequest(this.grantType, this.clientId, this.clientSecret, this.refreshToken), headers);
 
 		return restTemplate.exchange(url + "/oauth/token", HttpMethod.POST, formEntity, MeliToken.class)
 				.getBody().accessToken;

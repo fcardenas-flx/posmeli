@@ -6,10 +6,11 @@ import com.pos.meli.app.api.MeliProductVariationApi;
 import com.pos.meli.app.api.ProductApi;
 import com.pos.meli.app.rest.response.meliconnector.MeliItemAttribute;
 import com.pos.meli.app.rest.response.meliconnector.MeliItemResult;
-import com.pos.meli.app.rest.response.meliconnector.MeliItemVariation;
 import com.pos.meli.app.rest.response.meliconnector.MeliItemVariationResult;
 import com.pos.meli.app.rest.response.meliconnector.MeliPrice;
+import com.pos.meli.domain.model.MeliAccount;
 import com.pos.meli.domain.provider.meli.MeliConnector;
+import com.pos.meli.domain.repository.MeliAccountRepository;
 import com.pos.meli.domain.service.AbstractService;
 import com.pos.meli.domain.service.FileService;
 import com.pos.meli.domain.service.InventoryService;
@@ -18,18 +19,12 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.stereotype.Service;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -45,6 +40,9 @@ public class InventoryServiceImpl extends AbstractService implements InventorySe
 
 	@Autowired
 	MeliConnector meliConnector;
+
+	@Autowired
+	MeliAccountRepository meliAccountRepository;
 
 	@Autowired
 	FileService fileService;
@@ -133,17 +131,15 @@ public class InventoryServiceImpl extends AbstractService implements InventorySe
 	}
 
 	@Override
-	public List<MeliProductApi> getAllMeliProducts()
+	public List<MeliProductApi> getAllMeliProducts(String nickname)
 	{
-		String siteId = "MCO";
-		String nickname = "MOTOSHOP2REPUESTOS";
-		String userId = "537077242";
+		MeliAccount meliAccount = meliAccountRepository.findByNickname(nickname);
 
 		List<MeliProductApi> meliProductApiList = new ArrayList<>();
 
-		ArrayList<String> meliItemIds = meliConnector.getAllMeliProductsIds(siteId, nickname, userId);
+		ArrayList<String> meliItemIds = meliConnector.getAllMeliProductsIds(meliAccount.getSiteId(), meliAccount.getNickname(), meliAccount.getUserId());
 
-		String meliToken = meliConnector.getAuthorizationToken();
+		String meliToken = meliConnector.getAuthorizationToken(meliAccount.getMeliApiCredential());
 
 		meliItemIds.parallelStream().forEach(meliItemId ->
 		{
@@ -151,8 +147,6 @@ public class InventoryServiceImpl extends AbstractService implements InventorySe
 
 			try
 			{
-				System.out.println(meliItemId);
-
 				MeliItemResult meliItemResult = meliConnector.getItemById(meliItemId, meliToken);
 
 				meliProductApi.setName(meliItemResult.getTitle());
@@ -213,15 +207,15 @@ public class InventoryServiceImpl extends AbstractService implements InventorySe
 	}
 
 	@Override
-	public List<ProductApi> syncProducts() throws IOException, InvalidFormatException
+	public List<ProductApi> syncProducts(String nickname) throws IOException, InvalidFormatException
 	{
 		System.out.println("Obteniendo Información de Inventario...");
 
-		InventoryApi inventoryDataFile = getInventoryDataFile();
+		InventoryApi inventoryDataFile = getInventoryDataFile(nickname);
 
 		System.out.println("Obteniendo Información de productos Publicados en Meli...");
 
-		List<MeliProductApi> meliProductApiList = getAllMeliProducts();
+		List<MeliProductApi> meliProductApiList = getAllMeliProducts(nickname);
 
 		System.out.println("Obteniendo Información de productos con cantidades diferentes...");
 
@@ -312,7 +306,7 @@ public class InventoryServiceImpl extends AbstractService implements InventorySe
 					System.out.println("No se pudo actualizar producto con variación ");
 				}
 
-				System.out.println("Variación actualizada :" + variation.getId());
+				//System.out.println("Variación actualizada :" + variation.getId());
 			});
 		});
 
@@ -362,16 +356,16 @@ public class InventoryServiceImpl extends AbstractService implements InventorySe
 //				.filter(productApi -> meliProductApiList.stream()
 //						.noneMatch((meliProductApi -> meliProductApi.getSku().equals(productApi.getSku())))).collect(
 //						Collectors.toList());
-		return null;
+		return productApiListWithQuantityDifferences;
 	}
 
-	private InventoryApi getInventoryDataFile() throws IOException, InvalidFormatException
+	private InventoryApi getInventoryDataFile(String nickname) throws IOException, InvalidFormatException
 	{
 		InventoryApi inventoryApi = new InventoryApi();
 
 		List<ProductApi> productApiList = new ArrayList<>();
 
-		Workbook workbook = fileService.getXlsFileFromSftp("inventory.xls");
+		Workbook workbook = fileService.getXlsFileFromSftp(nickname+"_INVENTORY.xls");
 
 		Sheet sheet = workbook.getSheetAt(0);
 

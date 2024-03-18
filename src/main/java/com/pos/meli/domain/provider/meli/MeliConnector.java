@@ -5,6 +5,7 @@ import com.pos.meli.app.rest.response.meliconnector.MeliItemPrice;
 import com.pos.meli.app.rest.response.meliconnector.MeliItemResult;
 import com.pos.meli.app.rest.response.meliconnector.MeliItemVariationResult;
 import com.pos.meli.app.rest.response.meliconnector.MeliPrice;
+import com.pos.meli.domain.model.MeliApiCredential;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -26,6 +27,8 @@ public interface MeliConnector
 	ArrayList<String> getAllMeliProductsIds(String siteId, String nickname, String userId);
 
 	MeliItemResult updateItemQuantityVariation(String meliId,  String variationId, int quantity);
+
+	String getAuthorizationToken(MeliApiCredential meliApiCredential);
 
 	String getAuthorizationToken();
 

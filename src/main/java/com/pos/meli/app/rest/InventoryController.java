@@ -86,7 +86,7 @@ public class InventoryController
 			@ApiResponse(responseCode = "500", description = "Internal error.", content = @Content(schema = @Schema(implementation = ApiError.class))),
 	})
 	@GetMapping(path = "/sync/products", produces = { MediaType.APPLICATION_JSON_VALUE })
-	public ResponseEntity<?> syncProducts(@RequestParam String nickname)
+	public ResponseEntity<List<ProductApi>> syncProducts(@RequestParam String nickname)
 			throws Exception
 	{
 		return new ResponseEntity<>(inventoryService.syncProducts(nickname), HttpStatus.OK);

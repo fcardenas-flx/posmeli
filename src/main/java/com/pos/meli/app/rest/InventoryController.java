@@ -86,10 +86,11 @@ public class InventoryController
 			@ApiResponse(responseCode = "500", description = "Internal error.", content = @Content(schema = @Schema(implementation = ApiError.class))),
 	})
 	@GetMapping(path = "/sync/products", produces = { MediaType.APPLICATION_JSON_VALUE })
-	public ResponseEntity<List<ProductApi>> syncProducts(@RequestParam String nickname)
+	public ResponseEntity<?> syncProducts(@RequestParam String nickname)
 			throws Exception
 	{
-		return new ResponseEntity<>(inventoryService.syncProducts(nickname), HttpStatus.OK);
+		inventoryService.syncProducts(nickname);
+		return new ResponseEntity<>(HttpStatus.OK);
 	}
 
 	@Operation(summary = "Save Products", description = "Save Products")
@@ -107,6 +108,20 @@ public class InventoryController
 	{
 		List<ProductApi> productsSaved = inventoryService.saveProducts(request);
 		return new ResponseEntity<>(productsSaved, HttpStatus.OK);
+	}
+
+	@Operation(summary = "get Synchronized products By Process Id", description = "get Synchronized products By Process Id")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "Get all Synchronized products", content = @Content(array = @ArraySchema(schema = @Schema(implementation = ProductApi.class)))),
+			@ApiResponse(responseCode = "400", description = "Bad request data.", content = @Content(schema = @Schema(implementation = ApiError.class))),
+			@ApiResponse(responseCode = "404", description = "Not found.", content = @Content(schema = @Schema(implementation = ApiError.class))),
+			@ApiResponse(responseCode = "500", description = "Internal error.", content = @Content(schema = @Schema(implementation = ApiError.class))),
+	})
+	@GetMapping(path = "/get/SynchronizedProductsByProcessId", produces = { MediaType.APPLICATION_JSON_VALUE })
+	public ResponseEntity<List<ProductApi>> getSynchronizedProductsByProcessId(@RequestParam String processId)
+			throws Exception
+	{
+		return new ResponseEntity<>(inventoryService.getSynchronizedProductsByProcessId(processId), HttpStatus.OK);
 	}
 
 }

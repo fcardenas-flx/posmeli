@@ -9,8 +9,10 @@ import com.pos.meli.app.rest.response.meliconnector.MeliItemResult;
 import com.pos.meli.app.rest.response.meliconnector.MeliItemVariationResult;
 import com.pos.meli.app.rest.response.meliconnector.MeliPrice;
 import com.pos.meli.domain.model.MeliAccount;
+import com.pos.meli.domain.model.SynchronizedProduct;
 import com.pos.meli.domain.provider.meli.MeliConnector;
 import com.pos.meli.domain.repository.MeliAccountRepository;
+import com.pos.meli.domain.repository.SynchronizedProductRepository;
 import com.pos.meli.domain.service.AbstractService;
 import com.pos.meli.domain.service.FileService;
 import com.pos.meli.domain.service.InventoryService;
@@ -19,17 +21,21 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -45,7 +51,18 @@ public class InventoryServiceImpl extends AbstractService implements InventorySe
 	MeliAccountRepository meliAccountRepository;
 
 	@Autowired
+	SynchronizedProductRepository synchronizedProductRepository;
+
+	@Autowired
 	FileService fileService;
+
+	protected ModelMapper mapper;
+
+	@PostConstruct
+	protected void init()
+	{
+		mapper = new ModelMapper();
+	}
 
 	@Override
 	public List<MeliProductApi> getAllProducts() throws Exception
@@ -206,14 +223,26 @@ public class InventoryServiceImpl extends AbstractService implements InventorySe
 		return meliProductApiList;
 	}
 
+	@Async
 	@Override
-	public List<ProductApi> syncProducts(String nickname) throws IOException, InvalidFormatException
+	public void syncProducts(String nickname) throws IOException, InvalidFormatException
 	{
+
+		String UUID = generateRandomUUID();
+
+		System.out.println("UUID del Proceso..." + UUID);
+
 		System.out.println("Obteniendo Información de Inventario...");
 
 		InventoryApi inventoryDataFile = getInventoryDataFile(nickname);
 
 		System.out.println("Obteniendo Información de productos Publicados en Meli...");
+
+		MeliAccount meliAccount = meliAccountRepository.findByNickname(nickname);
+
+		String meliToken = meliConnector.getAuthorizationToken(meliAccount.getMeliApiCredential());
+
+		System.out.println("Token Obtenido...");
 
 		List<MeliProductApi> meliProductApiList = getAllMeliProducts(nickname);
 
@@ -251,14 +280,14 @@ public class InventoryServiceImpl extends AbstractService implements InventorySe
 				{
 					if (meliProduct.get().getVariations() == null)
 					{
-						meliConnector.updateItemQuantity(meliProduct.get().getMeliId(), productApi.getQuantity());
+						meliConnector.updateItemQuantity(meliProduct.get().getMeliId(), productApi.getQuantity(), meliToken);
 						System.out.println("Producto actualizado :" + meliProduct.get().getSku());
 					}
 					else
 					{
 						meliProduct.get().getVariations().stream().forEach(variation ->
 						{
-							meliConnector.updateItemQuantityVariation(meliProduct.get().getMeliId(), variation.getId(), productApi.getQuantity());
+							meliConnector.updateItemQuantityVariation(meliProduct.get().getMeliId(), variation.getId(), productApi.getQuantity(), meliToken);
 							System.out.println("Variación actualizada :" + variation.getId());
 						});
 					}
@@ -295,7 +324,7 @@ public class InventoryServiceImpl extends AbstractService implements InventorySe
 					if(variation.getQuantity() != product.getQuantity())
 					{
 						meliConnector.updateItemQuantityVariation(meliProductApi.getMeliId(), variation.getId(),
-								product.getQuantity());
+								product.getQuantity(), meliToken);
 
 						System.out.println(product.getName());
 						System.out.println(product.getSku());
@@ -310,53 +339,38 @@ public class InventoryServiceImpl extends AbstractService implements InventorySe
 			});
 		});
 
-
-
-//		inventoryDataFile.getProductApiList().stream().forEach(productApi ->
-//		{
-//			System.out.println("Sincronizando Producto: " + productApi.getSku() + " " + productApi.getName());
-//
-//			Optional<MeliProductApi> meliProduct = meliProductApiList.stream()
-//					.filter(meliProductApi -> meliProductApi.getSku().equals(productApi.getSku())).findFirst();
-//
-//			if (meliProduct.isPresent())
-//			{
-//				try
-//				{
-//					if (meliProduct.get().getVariations() == null)
-//					{
-//						meliConnector.updateItemQuantity(meliProduct.get().getMeliId(), productApi.getQuantity());
-//						System.out.println("Producto actualizado:" + meliProduct.get().getSku());
-//					}
-//					else
-//					{
-//						meliProduct.get().getVariations().stream().forEach(variationId ->
-//						{
-//							meliConnector.updateItemQuantityVariation(variationId, productApi.getQuantity());
-//							System.out.println("Producto con Variación actualizada :" + variationId);
-//						});
-//					}
-//				}
-//				catch (Exception exception)
-//				{
-//					System.out.println("Producto no se pudo actualizar");
-//				}
-//			}
-//			else
-//			{
-//				productApiListNonPublished.add(productApi);
-//				System.out.println("Producto no publicado en Meli");
-//			}
-//		});
-
-
 		System.out.println("Finalizado... Productos Sincronizados Satisfactoriamente");
 
-//		List<ProductApi> productApiListNonPublished = inventoryDataFile.getProductApiList().stream()
-//				.filter(productApi -> meliProductApiList.stream()
-//						.noneMatch((meliProductApi -> meliProductApi.getSku().equals(productApi.getSku())))).collect(
-//						Collectors.toList());
-		return productApiListWithQuantityDifferences;
+		System.out.println("Salvando Productos Sincronizados con Process Id");
+
+		List<SynchronizedProduct> synchronizedProducts = new ArrayList<>();
+
+		productApiListWithQuantityDifferences.stream().forEach(productApi ->
+		{
+			SynchronizedProduct synchronizedProduct = mapper.map(productApi, SynchronizedProduct.class);
+			synchronizedProduct.setProcessId(UUID);
+			synchronizedProducts.add(synchronizedProduct);
+		});
+
+		synchronizedProductRepository.saveAll(synchronizedProducts);
+
+		System.out.println("Productos Salvados con Process Id Exitosamente");
+	}
+
+	@Override
+	public List<ProductApi> getSynchronizedProductsByProcessId(String processId)
+	{
+
+		List<ProductApi> productSynchronizedApiList = new ArrayList<>();
+
+		List<SynchronizedProduct> synchronizedProducts = synchronizedProductRepository.findAllByProcessId(processId);
+
+		synchronizedProducts.stream().forEach(synchronizedProduct ->
+		{
+			productSynchronizedApiList.add(mapper.map(synchronizedProduct, ProductApi.class));
+		});
+
+		return productSynchronizedApiList;
 	}
 
 	private InventoryApi getInventoryDataFile(String nickname) throws IOException, InvalidFormatException
@@ -406,5 +420,12 @@ public class InventoryServiceImpl extends AbstractService implements InventorySe
 		return inventoryApi;
 	}
 
+	private String generateRandomUUID()
+	{
+		//generates random UUID
+		UUID uuid= UUID.randomUUID();
+		System.out.println(uuid);
+		return uuid.toString();
+	}
 
 }

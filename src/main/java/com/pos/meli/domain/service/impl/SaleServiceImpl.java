@@ -92,7 +92,7 @@ public class SaleServiceImpl extends AbstractService implements SaleService
 			int quantity = productQuantity - soldProductApi.getSoldQuantity();
 
 			//TODO: Update
-			meliConnector.updateItemQuantity(soldProductApi.getMeliId(), quantity);
+			meliConnector.updateItemQuantity(soldProductApi.getMeliId(), quantity, "");
 
 			soldProduct.setMeliId(soldProductApi.getMeliId());
 			soldProduct.setName(soldProductApi.getName());

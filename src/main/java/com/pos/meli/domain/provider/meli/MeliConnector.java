@@ -20,13 +20,13 @@ public interface MeliConnector
 
 	MeliItemResult getItemBySku(String sku);
 
-	MeliItemResult updateItemQuantity(String meliId, int quantity);
+	MeliItemResult updateItemQuantity(String meliId, int quantity, String meliToken);
 
 	MeliItemPrice getMshopsPriceById(String meliId);
 
 	ArrayList<String> getAllMeliProductsIds(String siteId, String nickname, String userId, String meliToken);
 
-	MeliItemResult updateItemQuantityVariation(String meliId,  String variationId, int quantity);
+	MeliItemResult updateItemQuantityVariation(String meliId,  String variationId, int quantity, String meliToken);
 
 	String getAuthorizationToken(MeliApiCredential meliApiCredential);
 

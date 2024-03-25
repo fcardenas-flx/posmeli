@@ -134,13 +134,12 @@ public class MeliConnectorImpl implements MeliConnector
 	}
 
 	@Override
-	public MeliItemResult updateItemQuantity(String meliID, int newQuantity)
+	public MeliItemResult updateItemQuantity(String meliID, int newQuantity, String meliToken)
 	{
 		HttpHeaders headers = new HttpHeaders();
 		headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 		headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
 
-		String meliToken = getAuthorizationToken();
 		headers.setBearerAuth(meliToken);
 
 		HttpEntity formEntity = new HttpEntity<String>("{\"available_quantity\":"+ newQuantity +"}", headers);
@@ -211,13 +210,12 @@ public class MeliConnectorImpl implements MeliConnector
 	}
 
 	@Override
-	public MeliItemResult updateItemQuantityVariation(String meliId, String variationId, int quantity)
+	public MeliItemResult updateItemQuantityVariation(String meliId, String variationId, int quantity, String meliToken)
 	{
 		HttpHeaders headers = new HttpHeaders();
 		headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 		headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
 
-		String meliToken = getAuthorizationToken();
 		headers.setBearerAuth(meliToken);
 
 		HttpEntity formEntity = new HttpEntity<String>("{\"variations\":[{\"id\":"+variationId+",\"available_quantity\":"+quantity+"}]}", headers);

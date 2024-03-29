@@ -10,6 +10,7 @@ import com.pos.meli.app.rest.response.meliconnector.MeliItemVariationResult;
 import com.pos.meli.app.rest.response.meliconnector.MeliPrice;
 import com.pos.meli.domain.model.MeliAccount;
 import com.pos.meli.domain.model.SynchronizedProduct;
+import com.pos.meli.domain.provider.email.EmailConnector;
 import com.pos.meli.domain.provider.meli.MeliConnector;
 import com.pos.meli.domain.repository.MeliAccountRepository;
 import com.pos.meli.domain.repository.SynchronizedProductRepository;
@@ -46,6 +47,9 @@ public class InventoryServiceImpl extends AbstractService implements InventorySe
 
 	@Autowired
 	MeliConnector meliConnector;
+
+	@Autowired
+	EmailConnector emailConnector;
 
 	@Autowired
 	MeliAccountRepository meliAccountRepository;
@@ -354,7 +358,9 @@ public class InventoryServiceImpl extends AbstractService implements InventorySe
 
 		synchronizedProductRepository.saveAll(synchronizedProducts);
 
-		System.out.println("Productos Salvados con Process Id Exitosamente");
+		System.out.println("Productos Salvados con Process Id Exitosamente " + UUID);
+
+		emailConnector.send("motoshop2.sogamoso@gmail.com", "motoshop2.sogamoso@gmail.com", "Productos Actualizados " + nickname, "Se actualizaron " +productApiListWithQuantityDifferences.size()+" productos con process id: " + UUID);
 	}
 
 	@Override

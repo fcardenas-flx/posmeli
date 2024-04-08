@@ -152,6 +152,95 @@ public class InventoryServiceImpl extends AbstractService implements InventorySe
 	}
 
 	@Override
+	public List<MeliProductApi> getAllMeliProducts(String nickname, String meliToken)
+	{
+		List<MeliProductApi> meliProductApiList = new ArrayList<>();
+
+		try
+		{
+			System.out.println("Consultando cuenta Meli...");
+
+			MeliAccount meliAccount = meliAccountRepository.findByNickname(nickname);
+
+			System.out.println("Obteniendo Ids de Productos...");
+
+			ArrayList<String> meliItemIds = meliConnector.getAllMeliProductsIds(meliAccount.getSiteId(),
+					meliAccount.getNickname(), meliAccount.getUserId(), meliToken);
+
+			System.out.println("Completando información de Productos...");
+
+			meliItemIds.parallelStream().forEach(meliItemId ->
+			{
+				MeliProductApi meliProductApi = new MeliProductApi();
+
+				try
+				{
+					MeliItemResult meliItemResult = meliConnector.getItemById(meliItemId, meliToken);
+
+					meliProductApi.setName(meliItemResult.getTitle());
+					meliProductApi.setMeliPrice(meliItemResult.getPrice());
+					meliProductApi.setMeliId(meliItemResult.getId());
+					meliProductApi.setSku(emptyData);
+					meliProductApi.setQuantity(meliItemResult.getAvailableQuantity());
+
+					if (!meliItemResult.getVariations().isEmpty())
+					{
+						ArrayList<MeliProductVariationApi> variations = new ArrayList<>();
+
+						meliItemResult.getVariations().stream().forEach(meliItemVariation ->
+						{
+							MeliProductVariationApi meliProductVariationApi = new MeliProductVariationApi();
+							meliProductVariationApi.setId(meliItemVariation.getId());
+							meliProductVariationApi.setQuantity(meliItemVariation.getAvailableQuantity());
+
+							MeliItemVariationResult meliItemVariationResult =
+									meliConnector.getVariationItemByMeliIdAndVariationId(meliItemId,
+											meliItemVariation.getId(), meliToken);
+
+							List<MeliItemAttribute> attributesSku = meliItemVariationResult.getAttributes().stream().
+									filter(attribute -> attribute.getId().equals("SELLER_SKU"))
+									.collect(Collectors.toList());
+
+							if (attributesSku.isEmpty())
+								meliProductVariationApi.setSku(emptyData);
+							else
+								meliProductVariationApi.setSku(attributesSku.get(0).getValueName());
+
+							variations.add(meliProductVariationApi);
+						});
+
+						meliProductApi.setVariations(variations);
+					}
+					else
+					{
+						List<MeliItemAttribute> attributesSku = meliItemResult.getAttributes().stream().
+								filter(attribute -> attribute.getId().equals("SELLER_SKU"))
+								.collect(Collectors.toList());
+
+						if (attributesSku.isEmpty())
+							meliProductApi.setSku(emptyData);
+						else
+							meliProductApi.setSku(attributesSku.get(0).getValueName());
+					}
+				}
+				catch (Exception exception)
+				{
+					System.out.println("Error Obteniendo información de Producto " + meliItemId);
+				}
+
+				meliProductApiList.add(meliProductApi);
+			});
+
+		}
+		catch (Exception exception)
+		{
+			System.out.println(exception.getCause() + " " + exception.getMessage());
+		}
+
+		return meliProductApiList;
+	}
+
+	@Override
 	public List<MeliProductApi> getAllMeliProducts(String nickname)
 	{
 		MeliAccount meliAccount = meliAccountRepository.findByNickname(nickname);
@@ -232,135 +321,143 @@ public class InventoryServiceImpl extends AbstractService implements InventorySe
 	public void syncProducts(String nickname) throws IOException, InvalidFormatException
 	{
 
-		String UUID = generateRandomUUID();
-
-		System.out.println("UUID del Proceso..." + UUID);
-
-		System.out.println("Obteniendo Información de Inventario...");
-
-		InventoryApi inventoryDataFile = getInventoryDataFile(nickname);
-
-		System.out.println("Obteniendo Información de productos Publicados en Meli...");
-
-		MeliAccount meliAccount = meliAccountRepository.findByNickname(nickname);
-
-		String meliToken = meliConnector.getAuthorizationToken(meliAccount.getMeliApiCredential());
-
-		System.out.println("Token Obtenido...");
-
-		List<MeliProductApi> meliProductApiList = getAllMeliProducts(nickname);
-
-		System.out.println("Obteniendo Información de productos con cantidades diferentes...");
-
-		List<ProductApi> productApiListWithQuantityDifferences = inventoryDataFile.getProductApiList().stream()
-				.filter(productApi -> meliProductApiList.stream()
-						.anyMatch(meliProductApi -> meliProductApi.getSku().equals(productApi.getSku())
-								&& meliProductApi.getQuantity() != productApi.getQuantity())).collect(Collectors.toList());
-
-		//TODO: Optimizar este filtro para obtener directamente las variaciones con cantidades diferentes
-		List<MeliProductApi> productApiListWithVariations = meliProductApiList.stream()
-				.filter(meliProductApi -> meliProductApi.getVariations() != null).collect(Collectors.toList());
-
-
-		List<ProductApi> productApiListNonPublished = new ArrayList<>();
-
-//		productApiListNonPublished = inventoryDataFile.getProductApiList().stream()
-//				.filter(productApi -> meliProductApiList.stream()
-//						.noneMatch(meliProductApi -> meliProductApi.getSku().equals(productApi.getSku()))).collect(Collectors.toList());
-
-
-		System.out.println("Sincronizando stock de productos... "+productApiListWithQuantityDifferences.size());
-
-		productApiListWithQuantityDifferences.stream().forEach(productApi ->
+		try
 		{
-			System.out.println("Sincronizando Producto: " + productApi.getSku() + " " + productApi.getName());
+			String UUID = generateRandomUUID();
 
-			Optional<MeliProductApi> meliProduct = meliProductApiList.stream()
-					.filter(meliProductApi -> meliProductApi.getSku().equals(productApi.getSku())).findFirst();
+			System.out.println("UUID del Proceso..." + UUID);
 
-			if (meliProduct.isPresent())
+			System.out.println("Obteniendo Información de Inventario...");
+
+			InventoryApi inventoryDataFile = getInventoryDataFile(nickname);
+
+			System.out.println("Obteniendo Información de productos Publicados en Meli...");
+
+			MeliAccount meliAccount = meliAccountRepository.findByNickname(nickname);
+
+			String meliToken = meliConnector.getAuthorizationToken(meliAccount.getMeliApiCredential());
+
+			System.out.println("Token Obtenido...");
+
+			List<MeliProductApi> meliProductApiList = getAllMeliProducts(nickname, meliToken);
+
+			System.out.println("Obteniendo Información de productos con cantidades diferentes...");
+
+			List<ProductApi> productApiListWithQuantityDifferences = inventoryDataFile.getProductApiList().stream()
+					.filter(productApi -> meliProductApiList.stream()
+							.anyMatch(meliProductApi -> meliProductApi.getSku().equals(productApi.getSku())
+									&& meliProductApi.getQuantity() != productApi.getQuantity())).collect(Collectors.toList());
+
+			//TODO: Optimizar este filtro para obtener directamente las variaciones con cantidades diferentes
+			List<MeliProductApi> productApiListWithVariations = meliProductApiList.stream()
+					.filter(meliProductApi -> meliProductApi.getVariations() != null).collect(Collectors.toList());
+
+
+			List<ProductApi> productApiListNonPublished = new ArrayList<>();
+
+	//		productApiListNonPublished = inventoryDataFile.getProductApiList().stream()
+	//				.filter(productApi -> meliProductApiList.stream()
+	//						.noneMatch(meliProductApi -> meliProductApi.getSku().equals(productApi.getSku()))).collect(Collectors.toList());
+
+
+			System.out.println("Sincronizando stock de productos... "+productApiListWithQuantityDifferences.size());
+
+			productApiListWithQuantityDifferences.stream().forEach(productApi ->
 			{
-				try
+				System.out.println("Sincronizando Producto: " + productApi.getSku() + " " + productApi.getName());
+
+				Optional<MeliProductApi> meliProduct = meliProductApiList.stream()
+						.filter(meliProductApi -> meliProductApi.getSku().equals(productApi.getSku())).findFirst();
+
+				if (meliProduct.isPresent())
 				{
-					if (meliProduct.get().getVariations() == null)
+					try
 					{
-						meliConnector.updateItemQuantity(meliProduct.get().getMeliId(), productApi.getQuantity(), meliToken);
-						System.out.println("Producto actualizado :" + meliProduct.get().getSku());
-					}
-					else
-					{
-						meliProduct.get().getVariations().stream().forEach(variation ->
+						if (meliProduct.get().getVariations() == null)
 						{
-							meliConnector.updateItemQuantityVariation(meliProduct.get().getMeliId(), variation.getId(), productApi.getQuantity(), meliToken);
-							System.out.println("Variación actualizada :" + variation.getId());
-						});
+							meliConnector.updateItemQuantity(meliProduct.get().getMeliId(), productApi.getQuantity(), meliToken);
+							System.out.println("Producto actualizado :" + meliProduct.get().getSku());
+						}
+						else
+						{
+							meliProduct.get().getVariations().stream().forEach(variation ->
+							{
+								meliConnector.updateItemQuantityVariation(meliProduct.get().getMeliId(), variation.getId(), productApi.getQuantity(), meliToken);
+								System.out.println("Variación actualizada :" + variation.getId());
+							});
+						}
 					}
-				}
-				catch (Exception exception)
-				{
-					System.out.println("Producto no se pudo actualizar");
-				}
-			}
-			else
-			{
-				//productApiListNonPublished.add(productApi);
-			}
-		});
-
-		System.out.println("Finalizado... Productos Sincronizados Satisfactoriamente");
-
-
-		System.out.println("Actualizando stock de productos con Variación");
-
-		productApiListWithVariations.parallelStream().forEach(meliProductApi ->
-		{
-			meliProductApi.getVariations().stream().forEach(variation ->
-			{
-
-
-				//System.out.println("Sincronizando Producto con variacion: " + variation.getId() + " Sku: " + variation.getSku() + " " + meliProductApi.getName());
-
-				try
-				{
-					ProductApi product = inventoryDataFile.getProductApiList().stream()
-							.filter(productApi -> productApi.getSku().equals(variation.getSku())).findFirst().get();
-
-					if(variation.getQuantity() != product.getQuantity())
+					catch (Exception exception)
 					{
-						meliConnector.updateItemQuantityVariation(meliProductApi.getMeliId(), variation.getId(),
-								product.getQuantity(), meliToken);
-
-						System.out.println(product.getName());
-						System.out.println(product.getSku());
+						System.out.println("Producto no se pudo actualizar");
 					}
 				}
-				catch (Exception exception)
+				else
 				{
-					System.out.println("No se pudo actualizar producto con variación ");
+					//productApiListNonPublished.add(productApi);
 				}
-
-				//System.out.println("Variación actualizada :" + variation.getId());
 			});
-		});
 
-		System.out.println("Finalizado... Productos Sincronizados Satisfactoriamente");
+			System.out.println("Finalizado... Productos Sincronizados Satisfactoriamente");
 
-		System.out.println("Salvando Productos Sincronizados con Process Id");
 
-		List<SynchronizedProduct> synchronizedProducts = new ArrayList<>();
+			System.out.println("Actualizando stock de productos con Variación");
 
-		productApiListWithQuantityDifferences.stream().forEach(productApi ->
+			productApiListWithVariations.parallelStream().forEach(meliProductApi ->
+			{
+				meliProductApi.getVariations().stream().forEach(variation ->
+				{
+
+
+					//System.out.println("Sincronizando Producto con variacion: " + variation.getId() + " Sku: " + variation.getSku() + " " + meliProductApi.getName());
+
+					try
+					{
+						ProductApi product = inventoryDataFile.getProductApiList().stream()
+								.filter(productApi -> productApi.getSku().equals(variation.getSku())).findFirst().get();
+
+						if(variation.getQuantity() != product.getQuantity())
+						{
+							meliConnector.updateItemQuantityVariation(meliProductApi.getMeliId(), variation.getId(),
+									product.getQuantity(), meliToken);
+
+							System.out.println(product.getName());
+							System.out.println(product.getSku());
+						}
+					}
+					catch (Exception exception)
+					{
+						System.out.println("No se pudo actualizar producto con variación ");
+					}
+
+					//System.out.println("Variación actualizada :" + variation.getId());
+				});
+			});
+
+			System.out.println("Finalizado... Productos Sincronizados Satisfactoriamente");
+
+			System.out.println("Salvando Productos Sincronizados con Process Id");
+
+			List<SynchronizedProduct> synchronizedProducts = new ArrayList<>();
+
+			productApiListWithQuantityDifferences.stream().forEach(productApi ->
+			{
+				SynchronizedProduct synchronizedProduct = mapper.map(productApi, SynchronizedProduct.class);
+				synchronizedProduct.setProcessId(UUID);
+				synchronizedProducts.add(synchronizedProduct);
+			});
+
+			synchronizedProductRepository.saveAll(synchronizedProducts);
+
+			System.out.println("Productos Salvados con Process Id Exitosamente " + UUID);
+
+			emailConnector.send("motoshop2.sogamoso@gmail.com", "motoshop2.sogamoso@gmail.com", "Productos Actualizados " + nickname, "Se actualizaron " +productApiListWithQuantityDifferences.size()+" productos con process id: " + UUID);
+
+		}
+		catch (Exception exception)
 		{
-			SynchronizedProduct synchronizedProduct = mapper.map(productApi, SynchronizedProduct.class);
-			synchronizedProduct.setProcessId(UUID);
-			synchronizedProducts.add(synchronizedProduct);
-		});
-
-		synchronizedProductRepository.saveAll(synchronizedProducts);
-
-		System.out.println("Productos Salvados con Process Id Exitosamente " + UUID);
-
-		emailConnector.send("motoshop2.sogamoso@gmail.com", "motoshop2.sogamoso@gmail.com", "Productos Actualizados " + nickname, "Se actualizaron " +productApiListWithQuantityDifferences.size()+" productos con process id: " + UUID);
+			System.out.println("Error Sincronizando Productos: " + exception.getCause()+ " " + exception.getMessage());
+		}
 	}
 
 	@Override

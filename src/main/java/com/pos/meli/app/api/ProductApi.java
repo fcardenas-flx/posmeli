@@ -45,4 +45,19 @@ public class ProductApi
 	@JsonSerialize(using = BigDecimalMoneySerializer.class)
 	@Schema(description = "Sale Price")
 	private BigDecimal salePrice;
+
+	@JsonProperty
+	private String location;
+
+	@JsonProperty
+	private String category;
+
+	@JsonProperty
+	private String supplier;
+
+	@JsonProperty
+	private String store;
+
+	@JsonProperty
+	private String reference;
 }

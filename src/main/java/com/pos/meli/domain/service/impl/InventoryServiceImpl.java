@@ -1,20 +1,30 @@
 package com.pos.meli.domain.service.impl;
 
+import com.pos.meli.app.api.IncomingInvoiceApi;
 import com.pos.meli.app.api.InventoryApi;
+import com.pos.meli.app.api.InvoiceItemApi;
 import com.pos.meli.app.api.MeliProductApi;
 import com.pos.meli.app.api.MeliProductVariationApi;
 import com.pos.meli.app.api.ProductApi;
+import com.pos.meli.app.rest.request.IncomingInvoiceRequest;
 import com.pos.meli.app.rest.response.meliconnector.MeliItemAttribute;
 import com.pos.meli.app.rest.response.meliconnector.MeliItemResult;
 import com.pos.meli.app.rest.response.meliconnector.MeliItemVariationResult;
 import com.pos.meli.app.rest.response.meliconnector.MeliPrice;
+import com.pos.meli.domain.model.IncomingProduct;
+import com.pos.meli.domain.model.InventoryProduct;
 import com.pos.meli.domain.model.MeliAccount;
+import com.pos.meli.domain.model.Seller;
 import com.pos.meli.domain.model.SynchronizedProduct;
 import com.pos.meli.domain.provider.email.EmailConnector;
 import com.pos.meli.domain.provider.meli.MeliConnector;
+import com.pos.meli.domain.repository.IncomingProductRepository;
+import com.pos.meli.domain.repository.InventoryProductRepository;
 import com.pos.meli.domain.repository.MeliAccountRepository;
+import com.pos.meli.domain.repository.SellerRepository;
 import com.pos.meli.domain.repository.SynchronizedProductRepository;
 import com.pos.meli.domain.service.AbstractService;
+import com.pos.meli.domain.service.Enum.UnWantedString;
 import com.pos.meli.domain.service.FileService;
 import com.pos.meli.domain.service.InventoryService;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
@@ -38,6 +48,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.regex.Pattern;
 
 @Service
 @EnableConfigurationProperties
@@ -56,6 +67,15 @@ public class InventoryServiceImpl extends AbstractService implements InventorySe
 
 	@Autowired
 	SynchronizedProductRepository synchronizedProductRepository;
+
+	@Autowired
+	InventoryProductRepository inventoryProductRepository;
+
+	@Autowired
+	IncomingProductRepository incomingProductRepository;
+
+	@Autowired
+	SellerRepository sellerRepository;
 
 	@Autowired
 	FileService fileService;
@@ -476,6 +496,158 @@ public class InventoryServiceImpl extends AbstractService implements InventorySe
 		return productSynchronizedApiList;
 	}
 
+	@Override
+	public List<ProductApi> saveProductsFromInventoryFile(String nickname)
+	{
+		try
+		{
+			List<ProductApi> productInventoryList = getInventoryDataFile(nickname).getProductApiList();
+
+			List<InventoryProduct> inventoryProductsToSave = new ArrayList<>();
+
+			productInventoryList.stream().forEach(productInventory ->
+			{
+				InventoryProduct inventoryProductToSave = new InventoryProduct();
+
+				inventoryProductToSave.setQuantity(productInventory.getQuantity());
+				inventoryProductToSave.setSku(productInventory.getSku());
+				inventoryProductToSave.setPurchasePrice(productInventory.getPurchasePrice());
+				inventoryProductToSave.setSalePrice(productInventory.getSalePrice());
+
+				String nameCleaned = getCleanedString(productInventory.getName());
+				inventoryProductToSave.setName(nameCleaned);
+
+				String reference = getLastWord(nameCleaned);
+
+				Seller seller = sellerRepository.findByName(productInventory.getStore());
+
+				inventoryProductToSave.setSeller(seller);
+
+				inventoryProductToSave.setReference(reference);
+
+				inventoryProductToSave.setLocation(productInventory.getLocation());
+
+				inventoryProductToSave.setSupplier(productInventory.getSupplier());
+
+				inventoryProductsToSave.add(inventoryProductToSave);
+			});
+
+			inventoryProductRepository.saveAll(inventoryProductsToSave);
+
+		}
+		catch (IOException e)
+		{
+			throw new RuntimeException(e);
+		}
+		catch (InvalidFormatException e)
+		{
+			throw new RuntimeException(e);
+		}
+
+		return List.of();
+	}
+
+	@Override
+	public List<ProductApi> saveIncomingProductsFromInvoiceFile(String nickname, IncomingInvoiceRequest incomingInvoiceRequest)
+	{
+
+		List<IncomingProduct> incomingProducts = new ArrayList<>();
+
+		IncomingInvoiceApi incomingInvoiceApi = getInvoiceDataFile(nickname, incomingInvoiceRequest);
+
+		Seller seller = sellerRepository.findByName("Repuestos");
+
+		incomingInvoiceApi.getInvoiceItems().stream().forEach(invoiceItemApi ->
+		{
+			if(!invoiceItemApi.getProduct().getName().isBlank())
+			{
+				IncomingProduct incomingProduct = new IncomingProduct();
+
+				incomingProduct.setName(invoiceItemApi.getProduct().getName());
+				incomingProduct.setSupplier(incomingInvoiceRequest.getSupplier());
+				incomingProduct.setInvoiceCode(incomingInvoiceRequest.getCode());
+
+				incomingProduct.setQuantity(invoiceItemApi.getProduct().getQuantity());
+
+				incomingProduct.setReference(invoiceItemApi.getProduct().getReference());
+
+				List<InventoryProduct> inventoryProductsByReference = inventoryProductRepository.findAllByReference(invoiceItemApi.getProduct().getReference());
+
+				if (!inventoryProductsByReference.isEmpty())
+					incomingProduct.setSku(inventoryProductsByReference.stream().findFirst().get().getSku());
+				else
+					incomingProduct.setSku(emptyData);
+
+				incomingProduct.setUnitValue(invoiceItemApi.getUnitValue());
+
+				BigDecimal purchasePrice = new BigDecimal(invoiceItemApi.getTax()).multiply(invoiceItemApi.getUnitValue());
+
+				incomingProduct.setPurchasePrice(purchasePrice);
+
+				BigDecimal salePrice = new BigDecimal(invoiceItemApi.getTax()).multiply(invoiceItemApi.getUnitValue()).multiply(
+						BigDecimal.valueOf(1.5));
+
+				incomingProduct.setSalePrice(salePrice);
+
+
+				incomingProduct.setSeller(seller);
+
+				incomingProducts.add(incomingProduct);
+			}
+
+		});
+
+		incomingProductRepository.saveAll(incomingProducts);
+
+
+		return List.of();
+	}
+
+	private IncomingInvoiceApi getInvoiceDataFile(String nickname, IncomingInvoiceRequest incomingInvoiceRequest)
+	{
+		IncomingInvoiceApi incomingInvoiceApi = new IncomingInvoiceApi();
+
+		List<InvoiceItemApi> invoiceItemApiList = new ArrayList<>();
+
+		Workbook workbook = fileService.getXlsFileFromSftp(
+				incomingInvoiceRequest.getCode() + "_" + incomingInvoiceRequest.getSupplier() + "_" +
+						nickname + ".xlsx");
+
+		Sheet sheet = workbook.getSheetAt(0);
+
+		Iterator<Row> rowIterator = sheet.iterator();
+
+		while (rowIterator.hasNext())
+		{
+			Row row = rowIterator.next();
+			Iterator<Cell> cellIterator = row.cellIterator();
+
+			if (row.getRowNum() == 0) {
+				continue;
+			}
+
+			InvoiceItemApi invoiceItemApi = new InvoiceItemApi();
+
+			ProductApi productApi = new ProductApi();
+
+			productApi.setReference(row.getCell(0).getStringCellValue());
+			productApi.setName(row.getCell(1).getStringCellValue());
+			productApi.setQuantity((int) row.getCell(2).getNumericCellValue());
+
+			invoiceItemApi.setProduct(productApi);
+
+			invoiceItemApi.setUnitValue(BigDecimal.valueOf(row.getCell(3).getNumericCellValue()));
+			invoiceItemApi.setTax(row.getCell(4).getNumericCellValue());
+			invoiceItemApi.setDiscount(row.getCell(5).getNumericCellValue());
+
+			invoiceItemApiList.add(invoiceItemApi);
+		}
+
+		incomingInvoiceApi.setInvoiceItems(invoiceItemApiList);
+
+		return incomingInvoiceApi;
+	}
+
 	private InventoryApi getInventoryDataFile(String nickname) throws IOException, InvalidFormatException
 	{
 		InventoryApi inventoryApi = new InventoryApi();
@@ -499,10 +671,14 @@ public class InventoryServiceImpl extends AbstractService implements InventorySe
 
 			ProductApi productApi = new ProductApi();
 
+			productApi.setStore(row.getCell(0).getStringCellValue());
+			productApi.setCategory(row.getCell(1).getStringCellValue());
 			productApi.setName(row.getCell(2).getStringCellValue());
 			productApi.setQuantity((int) row.getCell(7).getNumericCellValue());
 			productApi.setPurchasePrice(BigDecimal.valueOf(row.getCell(5).getNumericCellValue()));
 			productApi.setSalePrice(BigDecimal.valueOf(row.getCell(6).getNumericCellValue()));
+			productApi.setLocation(row.getCell(9).getStringCellValue());
+			productApi.setSupplier(row.getCell(12).getStringCellValue());
 
 			switch (row.getCell(3).getCellType())
 			{
@@ -529,6 +705,41 @@ public class InventoryServiceImpl extends AbstractService implements InventorySe
 		UUID uuid= UUID.randomUUID();
 		System.out.println(uuid);
 		return uuid.toString();
+	}
+
+	private String getCleanedString(String text)
+	{
+		if (text == null || text.isBlank()) {
+			return text;
+		}
+
+		UnWantedString[] unWantedStrings =
+				{UnWantedString.INITIAL, UnWantedString.SLASH, UnWantedString.MEDIUMSCRIPT, UnWantedString.DOUBLESPACE,
+				UnWantedString.Initial, UnWantedString.initial};
+
+		for (UnWantedString stringEnum : unWantedStrings)
+		{
+			String string = stringEnum.getValue();
+
+			if (string != null && !string.isBlank())
+			{
+				// Use regular expressions to replace case-insensitively
+				Pattern pattern = Pattern.compile(Pattern.quote(string), Pattern.CASE_INSENSITIVE);
+				text = pattern.matcher(text).replaceAll(" ");
+			}
+		}
+
+		return text.trim().replaceAll("\\s+", " ");
+	}
+
+	private String getLastWord(String text)
+	{
+		if (text == null || text.isBlank()) {
+			return "";
+		}
+
+		String[] words = text.split("\\s+");
+		return words[words.length - 1];
 	}
 
 }

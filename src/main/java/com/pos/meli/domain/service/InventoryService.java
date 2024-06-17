@@ -2,6 +2,7 @@ package com.pos.meli.domain.service;
 
 import com.pos.meli.app.api.MeliProductApi;
 import com.pos.meli.app.api.ProductApi;
+import com.pos.meli.app.rest.request.IncomingInvoiceRequest;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 
 import java.io.IOException;
@@ -22,4 +23,8 @@ public interface InventoryService
 	void syncProducts(String nickname) throws IOException, InvalidFormatException;
 
 	List<ProductApi> getSynchronizedProductsByProcessId(String processId);
+
+	List<ProductApi> saveProductsFromInventoryFile(String nickname);
+
+	List<ProductApi> saveIncomingProductsFromInvoiceFile(String nickname, IncomingInvoiceRequest incomingInvoiceRequest);
 }

@@ -25,6 +25,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 
+import com.pos.meli.app.rest.request.IncomingInvoiceRequest;
+
 import java.util.List;
 
 @CrossOrigin(origins = "*", maxAge = 86400)
@@ -122,6 +124,38 @@ public class InventoryController
 			throws Exception
 	{
 		return new ResponseEntity<>(inventoryService.getSynchronizedProductsByProcessId(processId), HttpStatus.OK);
+	}
+
+	@Operation(summary = "Save Products From Inventory File", description = "Save Products From Inventory File")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "Products Saved", content = @Content(array = @ArraySchema(schema = @Schema(implementation = ProductApi.class)))),
+			@ApiResponse(responseCode = "400", description = "Invalid request", content = @Content(schema = @Schema(implementation = ApiError.class))),
+			@ApiResponse(responseCode = "406", description = "Invalid request", content = @Content(schema = @Schema(implementation = ApiError.class))),
+			@ApiResponse(responseCode = "500", description = "Internal Error.", content = @Content(schema = @Schema(implementation = ApiError.class)))
+	})
+	@PostMapping(path = "/save/inventory", produces = { MediaType.APPLICATION_JSON_VALUE })
+	public ResponseEntity<?> saveProductsFromInventoryFile(@RequestParam String nickname)
+			throws Exception
+	{
+		List<ProductApi> productsSaved = inventoryService.saveProductsFromInventoryFile(nickname);
+		return new ResponseEntity<>(productsSaved, HttpStatus.OK);
+	}
+
+
+	@Operation(summary = "Save Incoming Products From Invoice File", description = "Save Incoming Products From Invoice File")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "Products Saved", content = @Content(array = @ArraySchema(schema = @Schema(implementation = ProductApi.class)))),
+			@ApiResponse(responseCode = "400", description = "Invalid request", content = @Content(schema = @Schema(implementation = ApiError.class))),
+			@ApiResponse(responseCode = "406", description = "Invalid request", content = @Content(schema = @Schema(implementation = ApiError.class))),
+			@ApiResponse(responseCode = "500", description = "Internal Error.", content = @Content(schema = @Schema(implementation = ApiError.class)))
+	})
+	@PostMapping(path = "/save/incomingProducts", produces = { MediaType.APPLICATION_JSON_VALUE },
+			consumes = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<?> saveIncomingProductsFromInvoiceFile(
+			@Parameter(description = "Incoming Invoice request", required = true) @RequestBody IncomingInvoiceRequest request , @RequestParam String nickname) throws Exception
+	{
+		List<ProductApi> productsSaved = inventoryService.saveIncomingProductsFromInvoiceFile(nickname, request);
+		return new ResponseEntity<>(productsSaved, HttpStatus.OK);
 	}
 
 }

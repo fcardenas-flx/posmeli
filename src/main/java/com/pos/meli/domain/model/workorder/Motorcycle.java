@@ -28,7 +28,7 @@ public class Motorcycle
 	@Column(name = "id", unique = true, nullable = false)
 	private Long id;
 
-	@Column(name = "patent", length = 10)
+	@Column(name = "patent", unique = true, nullable = false, length = 10)
 	private String patent;
 
 	@Column(name = "reference", length = 255)

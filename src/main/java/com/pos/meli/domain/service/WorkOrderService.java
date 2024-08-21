@@ -9,4 +9,6 @@ public interface WorkOrderService
 	List<WorkOrderApi> getAllWorkOrders();
 
 	WorkOrderApi getWorkOrderByCode(String code);
+
+	WorkOrderApi createWorkOrder(WorkOrderApi workOrderApi);
 }

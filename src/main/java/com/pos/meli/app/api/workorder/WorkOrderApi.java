@@ -31,10 +31,12 @@ import java.util.List;
 public class WorkOrderApi
 {
 	@JsonProperty
+	@JsonIgnore
 	@Schema(description = "id")
 	private Long id;
 
 	@JsonProperty
+	@JsonIgnore
 	@Schema(description = "code")
 	private String code;
 
@@ -61,18 +63,22 @@ public class WorkOrderApi
 	private MotorcycleOwnerApi motorcycleOwner;
 
 	@JsonProperty
+	@JsonIgnore
 	@Schema(description = "motorcyles parts")
 	private List<MotorcyclePartApi> motorcycleParts;
 
 	@JsonProperty
+	@JsonIgnore
 	@Schema(description = "motorcycle techinal Services")
 	private List<TechnicalServiceApi> technicalServices;
 
 	@JsonProperty
+	@JsonIgnore
 	@Schema(description = "assigned technician")
 	private TechnicianApi technician;
 
 	@JsonProperty
+	@JsonIgnore
 	@Schema(description = "Work order Total Amount")
 	@JsonSerialize(using = BigDecimalMoneySerializer.class)
 	private BigDecimal totalAmount;

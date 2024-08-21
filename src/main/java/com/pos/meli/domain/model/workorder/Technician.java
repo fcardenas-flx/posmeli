@@ -34,7 +34,7 @@ public class Technician
 	@Column(name = "lastName", length = 255)
 	private String lastName;
 
-	@Column(name = "identification", length = 50)
+	@Column(name = "identification", unique = true, nullable = false, length = 50)
 	private String identification;
 
 	@Column(name = "phoneNumber", length = 50)

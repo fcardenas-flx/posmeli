@@ -1,5 +1,6 @@
 package com.pos.meli.app.api.workorder;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -23,6 +24,7 @@ import lombok.Setter;
 public class MotorcycleApi
 {
 	@JsonProperty
+	@JsonIgnore
 	@Schema(description = "id")
 	private Long id;
 
@@ -32,7 +34,7 @@ public class MotorcycleApi
 
 	@JsonProperty
 	@Schema(description = "reference")
-	private String Reference;
+	private String reference;
 
 	@JsonProperty
 	@Schema(description = "color")

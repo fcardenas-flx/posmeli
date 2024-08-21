@@ -7,4 +7,6 @@ import java.util.List;
 public interface WorkOrderService
 {
 	List<WorkOrderApi> getAllWorkOrders();
+
+	WorkOrderApi getWorkOrderByCode(String code);
 }

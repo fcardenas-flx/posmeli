@@ -11,4 +11,5 @@ public interface WorkOrderRepository <T extends WorkOrder> extends JpaRepository
 		PagingAndSortingRepository<T, Long>
 {
 
+	WorkOrder findByCode(String code);
 }

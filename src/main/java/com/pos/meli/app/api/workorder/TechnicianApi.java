@@ -20,7 +20,7 @@ import lombok.Setter;
 @JsonInclude(JsonInclude.Include.ALWAYS)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Schema(description = "Technician.")
-public class Technician
+public class TechnicianApi
 {
 	@JsonProperty
 	@Schema(description = "id")

@@ -31,12 +31,15 @@ public class MotorcycleOwner
 	@Column(name = "name", length = 255)
 	private String name;
 
-	@Column(name = "name", length = 255)
+	@Column(name = "lastName", length = 255)
 	private String lastName;
 
-	@Column(name = "name", length = 50)
+	@Column(name = "identification", length = 50)
 	private String identification;
 
-	@Column(name = "name", length = 50)
+	@Column(name = "phoneNumber", length = 50)
 	private String phoneNumber;
+
+	@Column(name = "email", length = 255)
+	private String email;
 }

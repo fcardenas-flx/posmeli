@@ -1,5 +1,6 @@
 package com.pos.meli.domain.model.workorder;
 
+import com.pos.meli.domain.model.workorder.catalog.TechnicalService;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -10,33 +11,37 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+
 import javax.persistence.Table;
+
+import java.math.BigDecimal;
 
 import static javax.persistence.GenerationType.IDENTITY;
 
 @Entity
-@Table(name = "technicians")
+@Table(name = "work_order_technical_services")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Technician
+public class WorkOrderTechnicalService
 {
 	@Id
 	@GeneratedValue(strategy = IDENTITY)
 	@Column(name = "id", unique = true, nullable = false)
 	private Long id;
 
-	@Column(name = "name", length = 255)
-	private String name;
+	@ManyToOne
+	@JoinColumn(name = "technicalService_id", referencedColumnName = "id")
+	private TechnicalService technicalService;
 
-	@Column(name = "lastName", length = 255)
-	private String lastName;
+	@Column(name = "subTotal")
+	private BigDecimal subTotal;
 
-	@Column(name = "identification", length = 50)
-	private String identification;
-
-	@Column(name = "phoneNumber", length = 50)
-	private String phoneNumber;
+	@ManyToOne
+	@JoinColumn(name="workOrder_id", nullable=false)
+	private WorkOrder workOrder;
 }

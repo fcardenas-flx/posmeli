@@ -1,5 +1,6 @@
 package com.pos.meli.app.rest;
 
+import com.pos.meli.app.api.ProductApi;
 import com.pos.meli.app.api.workorder.WorkOrderApi;
 
 import com.pos.meli.domain.service.WorkOrderService;
@@ -17,6 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @CrossOrigin(origins = "*", maxAge = 86400)
@@ -34,10 +36,24 @@ public class WorkOrderController
 			@ApiResponse(responseCode = "404", description = "Not found.", content = @Content(schema = @Schema(implementation = ApiError.class))),
 			@ApiResponse(responseCode = "500", description = "Internal error.", content = @Content(schema = @Schema(implementation = ApiError.class))),
 	})
-	@GetMapping(path = "/get/allproducts", produces = { MediaType.APPLICATION_JSON_VALUE })
-	public ResponseEntity<?> getAllProducts()
+	@GetMapping(path = "/get/all", produces = { MediaType.APPLICATION_JSON_VALUE })
+	public ResponseEntity<?> getAll()
 			throws Exception
 	{
 		return new ResponseEntity<>(workOrderService.getAllWorkOrders(), HttpStatus.OK);
+	}
+
+	@Operation(summary = "get work order by code", description = "get work order by code")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "Get all products", content = @Content(array = @ArraySchema(schema = @Schema(implementation = ProductApi.class)))),
+			@ApiResponse(responseCode = "400", description = "Bad request data.", content = @Content(schema = @Schema(implementation = ApiError.class))),
+			@ApiResponse(responseCode = "404", description = "Not found.", content = @Content(schema = @Schema(implementation = ApiError.class))),
+			@ApiResponse(responseCode = "500", description = "Internal error.", content = @Content(schema = @Schema(implementation = ApiError.class))),
+	})
+	@GetMapping(path = "/get/order", produces = { MediaType.APPLICATION_JSON_VALUE })
+	public ResponseEntity<?> getOrderByCode(@RequestParam String code)
+			throws Exception
+	{
+		return new ResponseEntity<>(workOrderService.getWorkOrderByCode(code), HttpStatus.OK);
 	}
 }

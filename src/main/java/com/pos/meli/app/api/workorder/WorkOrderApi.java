@@ -50,7 +50,7 @@ public class WorkOrderApi
 
 	@JsonProperty
 	@Schema(description = "description")
-	private int description;
+	private String description;
 
 	@JsonProperty
 	@Schema(description = "motorcycle")
@@ -70,7 +70,7 @@ public class WorkOrderApi
 
 	@JsonProperty
 	@Schema(description = "assigned technician")
-	private Technician technician;
+	private TechnicianApi technician;
 
 	@JsonProperty
 	@Schema(description = "Work order Total Amount")

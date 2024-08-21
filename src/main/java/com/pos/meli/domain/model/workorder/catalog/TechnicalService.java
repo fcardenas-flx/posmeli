@@ -1,4 +1,4 @@
-package com.pos.meli.domain.model.workorder;
+package com.pos.meli.domain.model.workorder.catalog;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -15,13 +15,13 @@ import javax.persistence.Table;
 import static javax.persistence.GenerationType.IDENTITY;
 
 @Entity
-@Table(name = "motorcycle_parts")
+@Table(name = "technical_services")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class MotorcyclePart
+public class TechnicalService
 {
 	@Id
 	@GeneratedValue(strategy = IDENTITY)
@@ -31,12 +31,6 @@ public class MotorcyclePart
 	@Column(name = "code", length = 20)
 	private String code;
 
-	@Column(name = "reference", length = 255)
-	private String reference;
-
-	@Column(name = "name", length = 255)
-	private String name;
-
-	@Column(name = "name", length = 100)
-	private String brand;
+	@Column(name = "description", length = 255)
+	private String description;
 }

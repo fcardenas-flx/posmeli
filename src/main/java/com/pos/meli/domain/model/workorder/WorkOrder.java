@@ -48,8 +48,17 @@ public class WorkOrder
 	@Column(name = "description", length = 255)
 	private String description;
 
+	@Column(name = "status", length = 255)
+	private String status;
+
 	@Column(name = "total_amount")
 	private BigDecimal totalAmount;
+
+	@Column(name = "total_amount_parts")
+	private BigDecimal totalAmountParts;
+
+	@Column(name = "total_amount_service")
+	private BigDecimal totalAmountService;
 
 	@OneToOne(cascade = CascadeType.ALL)
 	@JoinColumn(name = "motorcycle_id", referencedColumnName = "id")

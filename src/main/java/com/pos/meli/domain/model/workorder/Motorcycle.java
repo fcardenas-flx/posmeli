@@ -32,7 +32,7 @@ public class Motorcycle
 	private String patent;
 
 	@Column(name = "reference", length = 255)
-	private String Reference;
+	private String reference;
 
 	@Column(name = "color", length = 40)
 	private String color;

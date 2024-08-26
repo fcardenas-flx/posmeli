@@ -1,4 +1,4 @@
-package com.pos.meli.app.api.workorder;
+package com.pos.meli.app.rest.request;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -6,7 +6,11 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonRootName;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-
+import com.pos.meli.app.api.workorder.MotorcycleApi;
+import com.pos.meli.app.api.workorder.MotorcycleOwnerApi;
+import com.pos.meli.app.api.workorder.MotorcyclePartApi;
+import com.pos.meli.app.api.workorder.TechnicalServiceApi;
+import com.pos.meli.app.api.workorder.TechnicianApi;
 import com.pos.meli.domain.util.BigDecimalMoneySerializer;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
@@ -24,14 +28,13 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@JsonRootName(value = "Work Order")
+@JsonRootName(value = "Update Work Order Request")
 @JsonInclude(JsonInclude.Include.ALWAYS)
 @JsonIgnoreProperties(ignoreUnknown = true)
-@Schema(description = "Work Order.")
-public class WorkOrderApi
+@Schema(description = "Update Work Order Request.")
+public class UpdateWorkOrderRequest
 {
 	@JsonProperty
-	@JsonIgnore
 	@Schema(description = "id")
 	private Long id;
 
@@ -41,7 +44,6 @@ public class WorkOrderApi
 	private String code;
 
 	@JsonProperty
-	@JsonIgnore
 	@Schema(description = "order created at")
 	private LocalDateTime createdAt;
 
@@ -77,24 +79,20 @@ public class WorkOrderApi
 	private List<TechnicalServiceApi> technicalServices;
 
 	@JsonProperty
-	@JsonIgnore
 	@Schema(description = "assigned technician")
 	private TechnicianApi technician;
 
 	@JsonProperty
-	@JsonIgnore
 	@Schema(description = "Work order Total Amount")
 	@JsonSerialize(using = BigDecimalMoneySerializer.class)
 	private BigDecimal totalAmount;
 
 	@JsonProperty
-	@JsonIgnore
 	@Schema(description = "Work order Total Amount Parts")
 	@JsonSerialize(using = BigDecimalMoneySerializer.class)
 	private BigDecimal totalAmountParts;
 
 	@JsonProperty
-	@JsonIgnore
 	@Schema(description = "Work order Total Amount Service")
 	@JsonSerialize(using = BigDecimalMoneySerializer.class)
 	private BigDecimal totalAmountService;

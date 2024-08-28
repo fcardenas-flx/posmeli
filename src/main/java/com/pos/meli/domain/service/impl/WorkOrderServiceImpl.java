@@ -52,7 +52,7 @@ public class WorkOrderServiceImpl implements WorkOrderService
 	@Override
 	public List<WorkOrderApi> getAllWorkOrders()
 	{
-		return workOrderRepository.findAll();
+		return workOrderRepository.findTop15ByOrderByUpdatedAtDesc();
 	}
 
 	@Override

@@ -96,6 +96,7 @@ public class WorkOrderServiceImpl implements WorkOrderService
 		{
 			existingMotorcycle.setId(existingMotorcycle.getId());
 			existingMotorcycle.setPatent(existingMotorcycle.getPatent());
+			existingMotorcycle.setBrand(existingMotorcycle.getBrand());
 			existingMotorcycle.setReference(existingMotorcycle.getReference());
 			existingMotorcycle.setColor(existingMotorcycle.getColor());
 			existingMotorcycle.setModel(existingMotorcycle.getModel());
@@ -105,6 +106,7 @@ public class WorkOrderServiceImpl implements WorkOrderService
 		{
 			Motorcycle motorcycle = new Motorcycle();
 			motorcycle.setPatent(workOrderApi.getMotorcycle().getPatent());
+			motorcycle.setBrand(workOrderApi.getMotorcycle().getBrand());
 			motorcycle.setReference(workOrderApi.getMotorcycle().getReference());
 			motorcycle.setColor(workOrderApi.getMotorcycle().getColor());
 			motorcycle.setModel(workOrderApi.getMotorcycle().getModel());

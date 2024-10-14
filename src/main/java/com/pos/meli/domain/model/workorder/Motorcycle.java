@@ -31,6 +31,9 @@ public class Motorcycle
 	@Column(name = "patent", unique = true, nullable = false, length = 10)
 	private String patent;
 
+	@Column(name = "brand", length = 255)
+	private String brand;
+
 	@Column(name = "reference", length = 255)
 	private String reference;
 

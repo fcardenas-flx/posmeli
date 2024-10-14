@@ -33,6 +33,10 @@ public class MotorcycleApi
 	private String patent;
 
 	@JsonProperty
+	@Schema(description = "brand")
+	private String brand;
+
+	@JsonProperty
 	@Schema(description = "reference")
 	private String reference;
 

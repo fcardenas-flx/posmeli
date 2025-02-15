@@ -360,6 +360,11 @@ public class InventoryServiceImpl extends AbstractService implements InventorySe
 	//						.noneMatch(meliProductApi -> meliProductApi.getSku().equals(productApi.getSku()))).collect(Collectors.toList());
 
 
+			List<ProductApi> productsUpdatedList = new ArrayList<>();
+
+			List<ProductApi> productsNonUpdatedList = new ArrayList<>();
+
+
 			System.out.println("Sincronizando stock de productos... "+productApiListWithQuantityDifferences.size());
 
 			productApiListWithQuantityDifferences.stream().forEach(productApi ->
@@ -377,6 +382,7 @@ public class InventoryServiceImpl extends AbstractService implements InventorySe
 						{
 							meliConnector.updateItemQuantity(meliProduct.get().getMeliId(), productApi.getQuantity(), meliToken);
 							System.out.println("Producto actualizado :" + meliProduct.get().getSku());
+							productsUpdatedList.add(productApi);
 						}
 						else
 						{
@@ -390,6 +396,7 @@ public class InventoryServiceImpl extends AbstractService implements InventorySe
 					catch (Exception exception)
 					{
 						System.out.println("Producto no se pudo actualizar");
+						productsNonUpdatedList.add(productApi);
 					}
 				}
 				else
@@ -408,14 +415,13 @@ public class InventoryServiceImpl extends AbstractService implements InventorySe
 				meliProductApi.getVariations().stream().forEach(variation ->
 				{
 
+					ProductApi product = inventoryDataFile.getProductApiList().stream()
+							.filter(productApi -> productApi.getSku().equals(variation.getSku())).findFirst().get();
 
 					//System.out.println("Sincronizando Producto con variacion: " + variation.getId() + " Sku: " + variation.getSku() + " " + meliProductApi.getName());
 
 					try
 					{
-						ProductApi product = inventoryDataFile.getProductApiList().stream()
-								.filter(productApi -> productApi.getSku().equals(variation.getSku())).findFirst().get();
-
 						if(variation.getQuantity() != product.getQuantity())
 						{
 							meliConnector.updateItemQuantityVariation(meliProductApi.getMeliId(), variation.getId(),
@@ -423,11 +429,14 @@ public class InventoryServiceImpl extends AbstractService implements InventorySe
 
 							System.out.println(product.getName());
 							System.out.println(product.getSku());
+
+							productsUpdatedList.add(product);
 						}
 					}
 					catch (Exception exception)
 					{
 						System.out.println("No se pudo actualizar producto con variación ");
+						productsNonUpdatedList.add(product);
 					}
 
 					//System.out.println("Variación actualizada :" + variation.getId());
@@ -451,7 +460,11 @@ public class InventoryServiceImpl extends AbstractService implements InventorySe
 
 			System.out.println("Productos Salvados con Process Id Exitosamente " + UUID);
 
-			emailConnector.send("motoshop2.sogamoso@gmail.com", "motoshop2.sogamoso@gmail.com", "Productos Actualizados " + nickname, "Se actualizaron " +productApiListWithQuantityDifferences.size()+" productos con process id: " + UUID);
+			String htmlReport = generateSyncReportHtml(productsUpdatedList, productsNonUpdatedList, "Se actualizaron " +productApiListWithQuantityDifferences.size()+
+					" productos con process id: " + UUID);
+
+			emailConnector.send("motoshop2.sogamoso@gmail.com", "motoshop2.sogamoso@gmail.com",
+					"Productos Actualizados " + nickname, " ", htmlReport);
 
 		}
 		catch (Exception exception)
@@ -500,7 +513,8 @@ public class InventoryServiceImpl extends AbstractService implements InventorySe
 			ProductApi productApi = new ProductApi();
 
 			productApi.setName(row.getCell(2).getStringCellValue());
-			productApi.setQuantity((int) row.getCell(7).getNumericCellValue());
+			productApi.setQuantity(Math.max((int) row.getCell(7).getNumericCellValue(), 0));
+
 			productApi.setPurchasePrice(BigDecimal.valueOf(row.getCell(5).getNumericCellValue()));
 			productApi.setSalePrice(BigDecimal.valueOf(row.getCell(6).getNumericCellValue()));
 
@@ -529,6 +543,49 @@ public class InventoryServiceImpl extends AbstractService implements InventorySe
 		UUID uuid= UUID.randomUUID();
 		System.out.println(uuid);
 		return uuid.toString();
+	}
+
+	private String generateSyncReportHtml(List<ProductApi> processedList, List<ProductApi> nonProcessedList, String text) {
+		StringBuilder html = new StringBuilder();
+		html.append("<html><body>");
+		html.append("<h2>").append(text).append("</h2>");
+
+		// Estilos CSS para mejorar la presentación
+		html.append("<style>")
+				.append("table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }")
+				.append("th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }")
+				.append("th { background-color: #f2f2f2; }")
+				.append("h3 { margin-top: 20px; }")
+				.append("</style>");
+
+		// Tabla de productos procesados
+		html.append("<h3 style='color:green;'>Productos Procesados</h3>");
+		html.append("<table>");
+		html.append("<tr><th>SKU</th><th>Nombre</th><th>Cantidad</th></tr>");
+		for (ProductApi p : processedList) {
+			html.append("<tr>")
+					.append("<td>").append(p.getSku()).append("</td>")
+					.append("<td>").append(p.getName()).append("</td>")
+					.append("<td>").append(p.getQuantity()).append("</td>")
+					.append("</tr>");
+		}
+		html.append("</table>");
+
+		// Tabla de productos no procesados
+		html.append("<h3 style='color:red;'>Productos No Procesados</h3>");
+		html.append("<table>");
+		html.append("<tr><th>SKU</th><th>Nombre</th><th>Cantidad</th><th>Motivo</th></tr>");
+		for (ProductApi p : nonProcessedList) {
+			html.append("<tr>")
+					.append("<td>").append(p.getSku()).append("</td>")
+					.append("<td>").append(p.getName()).append("</td>")
+					.append("<td>").append(p.getQuantity()).append("</td>")
+					.append("</tr>");
+		}
+		html.append("</table>");
+
+		html.append("</body></html>");
+		return html.toString();
 	}
 
 }

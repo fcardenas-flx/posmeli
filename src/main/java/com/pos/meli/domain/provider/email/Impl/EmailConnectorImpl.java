@@ -28,6 +28,23 @@ public class EmailConnectorImpl implements EmailConnector
 	}
 
 	@Override
+	public void send(String from, String to, String subject, String text, String body) throws MessagingException
+	{
+
+		MimeMessage message = mailSender.createMimeMessage();
+		MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+		helper.setFrom(from);
+		helper.setTo(to);
+		helper.setSubject(subject);
+		helper.setText(text);
+
+		helper.setText(body, true); // HTML
+
+		mailSender.send(message);
+	}
+
+	@Override
 	public void sendWithAttach(String from, String to, String subject,
 							   String text, String attachName,
 							   InputStreamSource inputStream) throws MessagingException {

@@ -8,6 +8,8 @@ public interface EmailConnector
 {
 	void send(String from, String to, String subject, String text);
 
+	void send(String from, String to, String subject, String text, String body) throws MessagingException;
+
 	void sendWithAttach(String from, String to, String subject,
 						String text, String attachName,
 						InputStreamSource inputStream) throws MessagingException;

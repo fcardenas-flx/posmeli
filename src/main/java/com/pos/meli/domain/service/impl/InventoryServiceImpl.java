@@ -414,14 +414,13 @@ public class InventoryServiceImpl extends AbstractService implements InventorySe
 			{
 				meliProductApi.getVariations().stream().forEach(variation ->
 				{
-
-					ProductApi product = inventoryDataFile.getProductApiList().stream()
-							.filter(productApi -> productApi.getSku().equals(variation.getSku())).findFirst().get();
-
 					//System.out.println("Sincronizando Producto con variacion: " + variation.getId() + " Sku: " + variation.getSku() + " " + meliProductApi.getName());
 
 					try
 					{
+						ProductApi product = inventoryDataFile.getProductApiList().stream()
+								.filter(productApi -> productApi.getSku().equals(variation.getSku())).findFirst().get();
+
 						if(variation.getQuantity() != product.getQuantity())
 						{
 							meliConnector.updateItemQuantityVariation(meliProductApi.getMeliId(), variation.getId(),
@@ -436,7 +435,13 @@ public class InventoryServiceImpl extends AbstractService implements InventorySe
 					catch (Exception exception)
 					{
 						System.out.println("No se pudo actualizar producto con variación ");
-						productsNonUpdatedList.add(product);
+
+						ProductApi productApi = new ProductApi();
+
+						productApi.setName(meliProductApi.getName());
+						productApi.setSku(meliProductApi.getSku());
+
+						productsNonUpdatedList.add(productApi);
 					}
 
 					//System.out.println("Variación actualizada :" + variation.getId());
